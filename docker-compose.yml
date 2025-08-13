@@ -1,0 +1,85 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    restart: always
+    env_file:
+      - ./nest-backend/.env
+    environment:
+      TZ: "America/Santiago"
+    ports:
+      - "5432:5432"
+    networks:
+      - ia_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  backend:
+    image: docker.io/eddindocker/nest-backend
+    container_name: nest-backend
+    ports:
+      - "3333:3333"
+    depends_on:
+      - postgres
+    networks:
+      - ia_network
+    env_file:
+      - ./nest-backend/.env
+  frontend:
+    image: docker.io/eddindocker/react-frontend
+    container_name: react-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+      - postgres
+    networks:
+      - ia_network
+  fast-detect-gpt:
+    image: docker.io/eddindocker/fast-detect-gpt
+    container_name: fast-detect-gpt
+    ports:
+      - "8001:8001"
+    networks:
+      - ia_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+#  lm-watermarking:
+#    image: docker.io/eddindocker/lm-watermarking
+#    container_name: lm-watermarking
+#    ports:
+#      - "8002:8002"
+#    networks:
+#      - ia_network
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [gpu]
+  #finetuned-bert: #en duda
+  #  image: docker.io/eddindocker/finetuned-bert
+  #  container_name: finetuned-bert
+  #  ports:
+  #    - "8003:8003"
+  #  networks:
+  #    - ia_network
+  #deploy:
+  # resources:
+  #   reservations:
+  #     devices:
+  #        - driver: nvidia
+  #          count: 1
+  #          capabilities: [gpu]
+
+networks:
+  ia_network:
+
+volumes:
+  postgres_data:
