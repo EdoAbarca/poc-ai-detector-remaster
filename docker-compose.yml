@@ -8,14 +8,20 @@ services:
       - ./nest-backend/.env
     environment:
       TZ: "America/Santiago"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     networks:
       - ia_network
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      
   backend:
-    image: docker.io/eddindocker/nest-backend
+    build:
+      context: ./nest-backend
+      dockerfile: Dockerfile
     container_name: nest-backend
     ports:
       - "3333:3333"
@@ -25,18 +31,23 @@ services:
       - ia_network
     env_file:
       - ./nest-backend/.env
+      
   frontend:
-    image: docker.io/eddindocker/react-frontend
+    build:
+      context: ./react-frontend
+      dockerfile: Dockerfile
     container_name: react-frontend
     ports:
       - "5173:5173"
     depends_on:
       - backend
-      - postgres
     networks:
       - ia_network
+      
   fast-detect-gpt:
-    image: docker.io/eddindocker/fast-detect-gpt
+    build:
+      context: ./fast-detect-gpt
+      dockerfile: Dockerfile
     container_name: fast-detect-gpt
     ports:
       - "8001:8001"

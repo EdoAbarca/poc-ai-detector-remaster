@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -14,85 +13,8 @@ datasource db {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  username  String
   password  String
-  created   String   @unique
-  analyses  Analysis[]
-  tags      Tag[]
-  keys      Key[]
-  @@map("users")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model AI {
-  id      Int      @id @default(autoincrement())
-  name    String
-  is_free Boolean
-  keys    Key[]
-  results Result[]
-
-  @@map("ais")
-}
-
-model Key {
-  id        Int    @id @default(autoincrement())
-  api_key   String
-  ai        AI     @relation(fields: [ai_id], references: [id], onDelete: Cascade)
-  ai_id     Int
-  user      User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id   Int
-  @@map("keys")
-}
-
-model Analysis {
-  id        Int        @id @default(autoincrement())
-  //created   DateTime   @default(now()) @db.Date //A reemplazar
-  created   String
-  title     String
-  documents Document[]
-  tags      Tag[]
-  user      User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id   Int
-
-  @@map("analysis")
-}
-
-model Document {
-  id          Int      @id @default(autoincrement())
-  title       String
-  results     Result[]
-  analysis    Analysis @relation(fields: [analysis_id], references: [id], onDelete: Cascade)
-  analysis_id Int
-
-  @@map("documents")
-}
-
-model Result {
-  id          Int      @id @default(autoincrement())
-  created     DateTime @default(now())
-  ai_score    Float
-  ai_result   String
-  //ai_made     Boolean
-  ai          AI       @relation(fields: [ai_id], references: [id], onDelete: Cascade)
-  ai_id       Int
-  document    Document @relation(fields: [document_id], references: [id], onDelete: Cascade)
-  document_id Int
-
-  @@map("results")
-}
-
-model Tag {
-  id        Int      @id @default(autoincrement())
-  name      String
-  analyses  Analysis[]
-  user      User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id   Int
-  @@map("tags")
-}
-
-//model IAText {
-  //id        Int      @id @default(autoincrement())
-  //text      String
-  //result    Result       @relation(fields: [result_id], references: [id], onDelete: Cascade)
-  //result_id     Int
-
-  //@@map("iatexts")

@@ -1,74 +1,52 @@
-#FROM python:3.11-bullseye
-FROM nvidia/cuda:12.1.0-base-ubuntu20.04
+# Multi-stage build for optimized Flask API with GPU support
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 AS base
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV DEBIAN_FRONTEND=noninteractive
+# Environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-RUN apt-get update && \
-    apt-get remove --purge python3
-    
-RUN apt-get install -y \
-        libglib2.0-0 \
-        wget \
-        build-essential \
-        libssl-dev \
-        libffi-dev \
-        zlib1g-dev \
-        libbz2-dev \
-        libreadline-dev \
-        libsqlite3-dev \
-        llvm \
-        libncurses5-dev \
-        libncursesw5-dev \
-        xz-utils \
-        tk-dev \
-        libffi-dev \
-        liblzma-dev \
-        python3-dev \
-        python3-pip
+# Install Python 3.11 and minimal dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-venv \
+    python3-pip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://www.python.org/ftp/python/3.11.5/Python-3.11.5.tgz && \
-    tar -xvf Python-3.11.5.tgz && \
-    cd Python-3.11.5 && \
-    ./configure --enable-optimizations && \
-    make && \
-    make install
+# Set Python 3.11 as default
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+
+# Install UV for fast package management
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:$PATH"
 
 WORKDIR /app
-RUN python3 -m pip install --upgrade pip
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
-RUN pip3 install --upgrade numpy
-#RUN pip3 install torch torchvision torchaudio -f https://download.pytorch.org/whl/cu121/torch_stable.html
-RUN pip3 install torch torchvision torchaudio
 
-RUN rm -rf Python-3.11.5 && \
-    apt-get purge -y --auto-remove \
-    wget \
-    build-essential \
-    libssl-dev \
-    libffi-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    llvm \
-    libncurses5-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    libffi-dev \
-    liblzma-dev \
-    python3-dev && \
-    apt-get clean
+# Copy dependency files
+COPY pyproject.toml requirements.txt ./
 
-# Set the default Python version
-RUN ln -sf /usr/local/bin/pip3 /usr/local/bin/pip && \
-    ln -sf /usr/local/bin/python3 /usr/local/bin/python
+# Install dependencies using UV (faster than pip)
+RUN uv pip install --system -r requirements.txt
 
-COPY /fdgpt /app/fdgpt
-WORKDIR /app/fdgpt
+# Copy application code
+COPY app/ ./app/
+
+# Create necessary directories
+RUN mkdir -p offload cache
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Expose port
 EXPOSE 8001
 
-CMD python3 manage.py runserver 0.0.0.0:8001
+# Set environment (override with docker run -e ENVIRONMENT=production)
+ENV ENVIRONMENT=development
+
+# Run Flask application
+CMD ["python3", "-m", "app.main"]
