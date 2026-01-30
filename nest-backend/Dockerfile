@@ -1,20 +1,27 @@
 FROM node:20-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-RUN npm install -g @nestjs/cli
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
-COPY package*.json ./
-COPY prisma ./prisma/
+# Install pnpm and dependencies
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
-RUN npm install
+# Copy Prisma schema
+COPY prisma ./prisma
 
+# Generate Prisma client
+RUN pnpm exec prisma generate
+
+# Copy application code
 COPY . .
 
-RUN npx prisma generate
+# Build the application
+RUN pnpm run build
 
-RUN npm run build
-
+# Expose port
 EXPOSE 3333
 
-CMD [ "sh", "-c", "npx prisma db push && npm run start:prod" ]
+# Start the application
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && pnpm run start:prod"]

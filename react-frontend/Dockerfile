@@ -1,15 +1,18 @@
 FROM node:20-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY package*.json ./
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
-RUN npm install
+# Install pnpm and dependencies
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
+# Copy application code
 COPY . .
 
+# Expose port
 EXPOSE 5173
 
-RUN npm run build
-
-CMD [ "npm", "run", "dev" ]
+# Start development server
+CMD ["pnpm", "dev", "--host"]
