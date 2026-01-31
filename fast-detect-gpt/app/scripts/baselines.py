@@ -31,16 +31,12 @@ def get_rank(logits, labels):
 
     # get rank of each label token in the model's likelihood ordering
     matches = (logits.argsort(-1, descending=True) == labels.unsqueeze(-1)).nonzero()
-    assert (
-        matches.shape[1] == 3
-    ), f"Expected 3 dimensions in matches tensor, got {matches.shape}"
+    assert matches.shape[1] == 3, f"Expected 3 dimensions in matches tensor, got {matches.shape}"
 
     ranks, timesteps = matches[:, -1], matches[:, -2]
 
     # make sure we got exactly one match for each timestep in the sequence
-    assert (
-        timesteps == torch.arange(len(timesteps)).to(timesteps.device)
-    ).all(), "Expected one match per timestep"
+    assert (timesteps == torch.arange(len(timesteps)).to(timesteps.device)).all(), "Expected one match per timestep"
 
     ranks = ranks.float() + 1  # convert to 1-indexed rank
     return -ranks.mean().item()
@@ -52,16 +48,12 @@ def get_logrank(logits, labels):
 
     # get rank of each label token in the model's likelihood ordering
     matches = (logits.argsort(-1, descending=True) == labels.unsqueeze(-1)).nonzero()
-    assert (
-        matches.shape[1] == 3
-    ), f"Expected 3 dimensions in matches tensor, got {matches.shape}"
+    assert matches.shape[1] == 3, f"Expected 3 dimensions in matches tensor, got {matches.shape}"
 
     ranks, timesteps = matches[:, -1], matches[:, -2]
 
     # make sure we got exactly one match for each timestep in the sequence
-    assert (
-        timesteps == torch.arange(len(timesteps)).to(timesteps.device)
-    ).all(), "Expected one match per timestep"
+    assert (timesteps == torch.arange(len(timesteps)).to(timesteps.device)).all(), "Expected one match per timestep"
 
     ranks = ranks.float() + 1  # convert to 1-indexed rank
     ranks = torch.log(ranks)
@@ -79,9 +71,7 @@ def get_entropy(logits, labels):
 
 def experiment(args):
     # load model
-    scoring_tokenizer = load_tokenizer(
-        args.scoring_model_name, args.dataset, args.cache_dir
-    )
+    scoring_tokenizer = load_tokenizer(args.scoring_model_name, args.dataset, args.cache_dir)
     scoring_model = load_model(args.scoring_model_name, args.device, args.cache_dir)
     scoring_model.eval()
     # load data
@@ -140,12 +130,8 @@ def experiment(args):
             "samples": [x["sampled_crit"] for x in eval_results],
         }
         fpr, tpr, roc_auc = get_roc_metrics(predictions["real"], predictions["samples"])
-        p, r, pr_auc = get_precision_recall_metrics(
-            predictions["real"], predictions["samples"]
-        )
-        print(
-            f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}"
-        )
+        p, r, pr_auc = get_precision_recall_metrics(predictions["real"], predictions["samples"])
+        print(f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}")
         # log results
         results_file = f"{args.output_file}.{name}.json"
         results = {
@@ -164,9 +150,7 @@ def experiment(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--output_file", type=str, default="./exp_test/results/xsum_gpt2"
-    )
+    parser.add_argument("--output_file", type=str, default="./exp_test/results/xsum_gpt2")
     parser.add_argument("--dataset", type=str, default="xsum")
     parser.add_argument("--dataset_file", type=str, default="./exp_test/data/xsum_gpt2")
     parser.add_argument("--scoring_model_name", type=str, default="gpt2")

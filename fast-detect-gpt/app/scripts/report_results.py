@@ -178,14 +178,8 @@ def report_refmodel_results(args):
         cols = []
         for dataset in datasets:
             for model in source_models:
-                filter = (
-                    ""
-                    if ref_model is None or ref_model == model
-                    else f".{ref_model}_{model}"
-                )
-                result_file = (
-                    f"{args.result_path}/{dataset}_{model}{filter}.{method}.json"
-                )
+                filter = "" if ref_model is None or ref_model == model else f".{ref_model}_{model}"
+                result_file = f"{args.result_path}/{dataset}_{model}{filter}.{method}.json"
                 if os.path.exists(result_file):
                     auroc = get_auroc(result_file)
                 else:
@@ -208,11 +202,7 @@ def report_refmodel_results(args):
     ref_models = [None, "gpt2-xl", "gpt-neo-2.7B", "gpt-j-6B"]
     for ref_model in ref_models:
         method = "sampling_discrepancy"
-        method_name = (
-            "Fast-DetectGPT (*/*)"
-            if ref_model is None
-            else f"Fast-DetectGPT ({source_models[ref_model]}/*)"
-        )
+        method_name = "Fast-DetectGPT (*/*)" if ref_model is None else f"Fast-DetectGPT ({source_models[ref_model]}/*)"
         cols = _get_method_aurocs(method, ref_model)
         cols = [f"{col:.4f}" for col in cols]
         print(method_name, " ".join(cols))
@@ -246,9 +236,7 @@ def report_chatgpt_gpt4_results(args):
         for model in source_models:
             cols = []
             for dataset in datasets:
-                result_file = (
-                    f"{args.result_path}/{dataset}_{model}{filter}.{method}.json"
-                )
+                result_file = f"{args.result_path}/{dataset}_{model}{filter}.{method}.json"
                 if os.path.exists(result_file):
                     auroc = get_auroc(result_file)
                 else:
@@ -351,9 +339,7 @@ def report_gpt3_results(args):
         for model in source_models:
             cols = []
             for dataset in datasets:
-                result_file = (
-                    f"{args.result_path}/{dataset}_{model}{filter}.{method}.json"
-                )
+                result_file = f"{args.result_path}/{dataset}_{model}{filter}.{method}.json"
                 if os.path.exists(result_file):
                     auroc = get_auroc(result_file)
                 else:

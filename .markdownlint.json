@@ -20,6 +20,7 @@
     "strict": false,
     "stern": false
   },
+  "MD022": false,
   "MD024": {
     "siblings_only": true
   },
@@ -30,16 +31,19 @@
   "MD029": {
     "style": "ordered"
   },
+  "MD031": false,
   "MD033": {
     "allowed_elements": ["br", "img", "details", "summary"]
   },
   "MD034": false,
   "MD036": false,
+  "MD040": false,
   "MD041": false,
   "MD046": {
     "style": "fenced"
   },
   "MD048": {
     "style": "backtick"
-  }
+  },
+  "MD060": false
 }

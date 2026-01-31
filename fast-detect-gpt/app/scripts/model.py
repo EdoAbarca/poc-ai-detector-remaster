@@ -39,14 +39,10 @@ def get_model(model_name, kwargs, cache_dir):
     print(f"[model.py] (get_model) Loading model {model_name}...")
 
     if os.path.exists(local_path):
-        print(
-            "[model.py] (get_model) Ruta local existe, posiblemente los archivos estén en caché"
-        )
+        print("[model.py] (get_model) Ruta local existe, posiblemente los archivos estén en caché")
         # Variable to track whether "config.json" was found
         # We assume that if "config.json" is found, then the model is found (model) / if "config_tokenizer.json" is found, then the tokenizer is found (tokenizer)
-        print(
-            f'[model.py] (get_model) Buscando modelo ("config.json") en: {local_path}'
-        )
+        print(f'[model.py] (get_model) Buscando modelo ("config.json") en: {local_path}')
         config_found = False
         # Search for "config.json" in the specified directory and its subdirectories
         for folder_path, _, files in os.walk(local_path):
@@ -54,9 +50,7 @@ def get_model(model_name, kwargs, cache_dir):
                 config_found = True
                 # model_path = os.path.join(folder_path, "config.json")
                 model_path = folder_path
-                print(
-                    f'[model.py] (get_model) "config.json" encontrado en: {model_path}'
-                )
+                print(f'[model.py] (get_model) "config.json" encontrado en: {model_path}')
         if config_found:
             # return AutoModelForCausalLM.from_pretrained(model_path, **kwargs)
             print("[model.py] (get_model) Cargando modelo desde caché local...")
@@ -80,9 +74,7 @@ def get_model(model_name, kwargs, cache_dir):
                 return model
             except (OSError, RuntimeError) as e:
                 print(f"[model.py] (get_model) Error loading cached model: {e}")
-                print(
-                    "[model.py] (get_model) Falling back to downloading from Hugging Face..."
-                )
+                print("[model.py] (get_model) Falling back to downloading from Hugging Face...")
 
                 load_kwargs = {
                     "cache_dir": cache_dir,
@@ -142,14 +134,10 @@ def get_model(model_name, kwargs, cache_dir):
 def get_tokenizer(model_name, kwargs, cache_dir):
     local_path = get_base_route(model_name, cache_dir)
     if os.path.exists(local_path):
-        print(
-            "[model.py] (get_tokenizer) Ruta local existe, posiblemente los archivos estén en caché"
-        )
+        print("[model.py] (get_tokenizer) Ruta local existe, posiblemente los archivos estén en caché")
         # Variable to track whether "config_tokenizer.json" was found
         # We assume that if "config.json" was found, then the model is found (model) / if "config_tokenizer.json" was found, then the tokenizer is found (tokenizer)
-        print(
-            f'[model.py] (get_tokenizer) Buscando tokenizador ("config_tokenizer.json") en: {local_path}'
-        )
+        print(f'[model.py] (get_tokenizer) Buscando tokenizador ("config_tokenizer.json") en: {local_path}')
         config_tokenizer_found = False
         # Search for "config._tokenizer.json" in the specified directory and its subdirectories
         for folder_path, _, files in os.walk(local_path):
@@ -157,9 +145,7 @@ def get_tokenizer(model_name, kwargs, cache_dir):
                 config_tokenizer_found = True
                 # config_file_path = os.path.join(folder_path, "config_tokenizer.json")
                 tokenizer_path = folder_path
-                print(
-                    f'[model.py] (get_tokenizer) "config_tokenizer.json" encontrado en: {tokenizer_path}'
-                )
+                print(f'[model.py] (get_tokenizer) "config_tokenizer.json" encontrado en: {tokenizer_path}')
         if config_tokenizer_found:
             return AutoTokenizer.from_pretrained(tokenizer_path, **kwargs)
         else:
@@ -168,9 +154,7 @@ def get_tokenizer(model_name, kwargs, cache_dir):
                 model_name, **kwargs, cache_dir=cache_dir
             )  # Falla, integrar en un try-catch, ejecutar con ruta local despues de la falla (modelo ya estará descargado en caché local)
     else:
-        print(
-            "[model.py] (get_tokenizer) Ruta local no existe, se descargará el tokenizador"
-        )
+        print("[model.py] (get_tokenizer) Ruta local no existe, se descargará el tokenizador")
         return AutoTokenizer.from_pretrained(
             model_name, **kwargs, cache_dir=cache_dir
         )  # Falla, integrar en un try-catch, ejecutar con ruta local despues de la falla (modelo ya estará descargado en caché local)
@@ -237,9 +221,7 @@ def load_tokenizer(model_name, for_dataset, cache_dir):
     else:
         optional_tok_kwargs["padding_side"] = "right"
     print("[model.py] (load_tokenizer.py) cargando tokenizador...")
-    base_tokenizer = get_tokenizer(
-        model_fullname, optional_tok_kwargs, cache_dir=cache_dir
-    )
+    base_tokenizer = get_tokenizer(model_fullname, optional_tok_kwargs, cache_dir=cache_dir)
     print(
         "[model.py] (load_tokenizer.py) tokenizador cargado. Tokenizador: ",
         base_tokenizer,

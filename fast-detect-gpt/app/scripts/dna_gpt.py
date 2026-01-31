@@ -20,9 +20,7 @@ import custom_datasets
 class PrefixSampler:
     def __init__(self, args):
         self.args = args
-        self.base_tokenizer = load_tokenizer(
-            args.base_model_name, args.dataset, args.cache_dir
-        )
+        self.base_tokenizer = load_tokenizer(args.base_model_name, args.dataset, args.cache_dir)
         self.base_model = load_model(args.base_model_name, args.device, args.cache_dir)
 
     def _sample_from_model(self, texts, min_words=55, truncate_ratio=0.5):
@@ -30,15 +28,11 @@ class PrefixSampler:
         if self.args.dataset == "pubmed":
             pubmed_sep = " Answer:"
             texts = [t[: t.index(pubmed_sep) + len(pubmed_sep)] for t in texts]
-            all_encoded = self.base_tokenizer(
-                texts, return_tensors="pt", padding=True
-            ).to(self.args.device)
+            all_encoded = self.base_tokenizer(texts, return_tensors="pt", padding=True).to(self.args.device)
         else:
             texts = [t.split(" ") for t in texts]
             texts = [" ".join(t[: int(len(t) * truncate_ratio)]) for t in texts]
-            all_encoded = self.base_tokenizer(
-                texts, return_tensors="pt", padding=True
-            ).to(self.args.device)
+            all_encoded = self.base_tokenizer(texts, return_tensors="pt", padding=True).to(self.args.device)
 
         self.base_model.eval()
         decoded = ["" for _ in range(len(texts))]
@@ -67,9 +61,7 @@ class PrefixSampler:
                 pad_token_id=self.base_tokenizer.eos_token_id,
                 eos_token_id=self.base_tokenizer.eos_token_id,
             )
-            decoded = self.base_tokenizer.batch_decode(
-                outputs, skip_special_tokens=True
-            )
+            decoded = self.base_tokenizer.batch_decode(outputs, skip_special_tokens=True)
             m = min(len(x.split()) for x in decoded)
             tries += 1
 
@@ -101,9 +93,7 @@ class PrefixSampler:
 
         assert len(raw_data) % batch_size == 0
         for batch in range(len(raw_data) // batch_size):
-            print(
-                "Generating samples for batch", batch, "of", len(raw_data) // batch_size
-            )
+            print("Generating samples for batch", batch, "of", len(raw_data) // batch_size)
             original_text = raw_data[batch * batch_size : (batch + 1) * batch_size]
             sampled_text = self._sample_from_model(
                 original_text,
@@ -135,9 +125,7 @@ def get_likelihood(logits, labels, pad_index):
 
 
 def get_log_prob(sampler, text):
-    tokenized = sampler.base_tokenizer(text, return_tensors="pt", padding=True).to(
-        sampler.args.device
-    )
+    tokenized = sampler.base_tokenizer(text, return_tensors="pt", padding=True).to(sampler.args.device)
     labels = tokenized.input_ids[:, 1:]
     with torch.no_grad():
         logits_score = sampler.base_model(**tokenized).logits[:, :-1]
@@ -156,9 +144,7 @@ def get_log_probs(sampler, texts):
         labels = tokenized.input_ids[:, 1:]
         with torch.no_grad():
             logits_score = sampler.base_model(**tokenized).logits[:, :-1]
-            lprobs = get_likelihood(
-                logits_score, labels, sampler.base_tokenizer.pad_token_id
-            )
+            lprobs = get_likelihood(logits_score, labels, sampler.base_tokenizer.pad_token_id)
             batch_lprobs.append(lprobs)
     return torch.cat(batch_lprobs, dim=0)
 
@@ -212,9 +198,7 @@ def experiment(args):
         "samples": [x["sampled_crit"] for x in results],
     }
     fpr, tpr, roc_auc = get_roc_metrics(predictions["real"], predictions["samples"])
-    p, r, pr_auc = get_precision_recall_metrics(
-        predictions["real"], predictions["samples"]
-    )
+    p, r, pr_auc = get_precision_recall_metrics(predictions["real"], predictions["samples"])
     print(f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}")
     # results
     results_file = f"{args.output_file}.{name}.json"
@@ -234,13 +218,9 @@ def experiment(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--output_file", type=str, default="./exp_test/results/pubmed_davinci"
-    )
+    parser.add_argument("--output_file", type=str, default="./exp_test/results/pubmed_davinci")
     parser.add_argument("--dataset", type=str, default="pubmed")
-    parser.add_argument(
-        "--dataset_file", type=str, default="./exp_test/data/pubmed_davinci"
-    )
+    parser.add_argument("--dataset_file", type=str, default="./exp_test/data/pubmed_davinci")
     parser.add_argument("--truncate_ratio", type=float, default=0.5)
     parser.add_argument("--regen_number", type=int, default=10)
     parser.add_argument("--base_model_name", type=str, default="gpt2")

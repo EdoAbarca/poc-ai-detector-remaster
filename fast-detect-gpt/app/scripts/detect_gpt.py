@@ -30,9 +30,7 @@ def load_mask_model(model_name, device, cache_dir):
 
 def load_mask_tokenizer(model_name, max_length, cache_dir):
     model_name = get_model_fullname(model_name)
-    tokenizer = from_pretrained(
-        AutoTokenizer, model_name, {"model_max_length": max_length}, cache_dir
-    )
+    tokenizer = from_pretrained(AutoTokenizer, model_name, {"model_max_length": max_length}, cache_dir)
     return tokenizer
 
 
@@ -68,9 +66,7 @@ def tokenize_and_mask(text, span_length, pct, ceil_pct=False):
 
 
 def count_masks(texts):
-    return [
-        len([x for x in text.split() if x.startswith("<extra_id_")]) for text in texts
-    ]
+    return [len([x for x in text.split() if x.startswith("<extra_id_")]) for text in texts]
 
 
 # replace each masked span with a sample from T5 mask_model
@@ -133,14 +129,8 @@ def perturb_texts_(args, mask_model, mask_tokenizer, texts, ceil_pct=False):
     attempts = 1
     while "" in perturbed_texts:
         idxs = [idx for idx, x in enumerate(perturbed_texts) if x == ""]
-        print(
-            f"WARNING: {len(idxs)} texts have no fills. Trying again [attempt {attempts}]."
-        )
-        masked_texts = [
-            tokenize_and_mask(x, span_length, pct, ceil_pct)
-            for idx, x in enumerate(texts)
-            if idx in idxs
-        ]
+        print(f"WARNING: {len(idxs)} texts have no fills. Trying again [attempt {attempts}].")
+        masked_texts = [tokenize_and_mask(x, span_length, pct, ceil_pct) for idx, x in enumerate(texts) if idx in idxs]
         raw_fills = replace_masks(args, mask_model, mask_tokenizer, masked_texts)
         extracted_fills = extract_fills(raw_fills)
         new_perturbed_texts = apply_extracted_fills(masked_texts, extracted_fills)
@@ -169,9 +159,7 @@ def perturb_texts(args, mask_model, mask_tokenizer, texts, ceil_pct=False):
 # Get the log likelihood of each text under the base_model
 def get_ll(args, scoring_model, scoring_tokenizer, text):
     with torch.no_grad():
-        tokenized = scoring_tokenizer(
-            text, return_tensors="pt", return_token_type_ids=False
-        ).to(args.device)
+        tokenized = scoring_tokenizer(text, return_tensors="pt", return_token_type_ids=False).to(args.device)
         labels = tokenized.input_ids
         return -scoring_model(**tokenized, labels=labels).loss.item()
 
@@ -184,17 +172,13 @@ def generate_perturbs(args):
     n_perturbations = args.n_perturbations
     name = f"perturbation_{n_perturbations}"
     # load model
-    mask_model = load_mask_model(
-        args.mask_filling_model_name, args.device, args.cache_dir
-    )
+    mask_model = load_mask_model(args.mask_filling_model_name, args.device, args.cache_dir)
     mask_model.eval()
     try:
         n_positions = mask_model.config.n_positions
     except AttributeError:
         n_positions = 512
-    mask_tokenizer = load_mask_tokenizer(
-        args.mask_filling_model_name, n_positions, args.cache_dir
-    )
+    mask_tokenizer = load_mask_tokenizer(args.mask_filling_model_name, n_positions, args.cache_dir)
 
     # load data
     data = load_data(args.dataset_file)
@@ -237,25 +221,19 @@ def generate_perturbs(args):
             }
         )
 
-    save_data(
-        f"{args.dataset_file}.{args.mask_filling_model_name}.{name}", args, perturbs
-    )
+    save_data(f"{args.dataset_file}.{args.mask_filling_model_name}.{name}", args, perturbs)
 
 
 def experiment(args):
     n_perturbations = args.n_perturbations
     name = f"perturbation_{n_perturbations}"
-    perturb_file = (
-        f"{args.dataset_file}.{args.mask_filling_model_name}.{name}.raw_data.json"
-    )
+    perturb_file = f"{args.dataset_file}.{args.mask_filling_model_name}.{name}.raw_data.json"
     if os.path.exists(perturb_file):
         print(f"Use existing perturbation file: {perturb_file}")
     else:
         generate_perturbs(args)
     # load model
-    scoring_tokenizer = load_tokenizer(
-        args.scoring_model_name, args.dataset, args.cache_dir
-    )
+    scoring_tokenizer = load_tokenizer(args.scoring_model_name, args.dataset, args.cache_dir)
     scoring_model = load_model(args.scoring_model_name, "cpu", args.cache_dir)
     scoring_model.eval()
     scoring_model.to(args.device)
@@ -275,14 +253,10 @@ def experiment(args):
         perturbed_sampled = results[idx]["perturbed_sampled"]
         # original text
         original_ll = get_ll(args, scoring_model, scoring_tokenizer, original_text)
-        p_original_ll = get_lls(
-            args, scoring_model, scoring_tokenizer, perturbed_original
-        )
+        p_original_ll = get_lls(args, scoring_model, scoring_tokenizer, perturbed_original)
         # sampled text
         sampled_ll = get_ll(args, scoring_model, scoring_tokenizer, sampled_text)
-        p_sampled_ll = get_lls(
-            args, scoring_model, scoring_tokenizer, perturbed_sampled
-        )
+        p_sampled_ll = get_lls(args, scoring_model, scoring_tokenizer, perturbed_sampled)
         # result
         results[idx]["original_ll"] = original_ll
         results[idx]["sampled_ll"] = sampled_ll
@@ -290,12 +264,8 @@ def experiment(args):
         results[idx]["all_perturbed_original_ll"] = p_original_ll
         results[idx]["perturbed_sampled_ll"] = np.mean(p_sampled_ll)
         results[idx]["perturbed_original_ll"] = np.mean(p_original_ll)
-        results[idx]["perturbed_sampled_ll_std"] = (
-            np.std(p_sampled_ll) if len(p_sampled_ll) > 1 else 1
-        )
-        results[idx]["perturbed_original_ll_std"] = (
-            np.std(p_original_ll) if len(p_original_ll) > 1 else 1
-        )
+        results[idx]["perturbed_sampled_ll_std"] = np.std(p_sampled_ll) if len(p_sampled_ll) > 1 else 1
+        results[idx]["perturbed_original_ll_std"] = np.std(p_original_ll) if len(p_original_ll) > 1 else 1
 
     # compute diffs with perturbed
     predictions = {"real": [], "samples": []}
@@ -303,33 +273,25 @@ def experiment(args):
         if res["perturbed_original_ll_std"] == 0:
             res["perturbed_original_ll_std"] = 1
             print("WARNING: std of perturbed original is 0, setting to 1")
-            print(
-                f'Number of unique perturbed original texts: {len(set(res["perturbed_original"]))}'
-            )
+            print(f'Number of unique perturbed original texts: {len(set(res["perturbed_original"]))}')
             print(f'Original text: {res["original"]}')
         if res["perturbed_sampled_ll_std"] == 0:
             res["perturbed_sampled_ll_std"] = 1
             print("WARNING: std of perturbed sampled is 0, setting to 1")
-            print(
-                f'Number of unique perturbed sampled texts: {len(set(res["perturbed_sampled"]))}'
-            )
+            print(f'Number of unique perturbed sampled texts: {len(set(res["perturbed_sampled"]))}')
             print(f'Sampled text: {res["sampled"]}')
         predictions["real"].append(
-            (res["original_ll"] - res["perturbed_original_ll"])
-            / res["perturbed_original_ll_std"]
+            (res["original_ll"] - res["perturbed_original_ll"]) / res["perturbed_original_ll_std"]
         )
         predictions["samples"].append(
-            (res["sampled_ll"] - res["perturbed_sampled_ll"])
-            / res["perturbed_sampled_ll_std"]
+            (res["sampled_ll"] - res["perturbed_sampled_ll"]) / res["perturbed_sampled_ll_std"]
         )
 
     print(
         f'Real mean/std: {np.mean(predictions["real"]):.2f}/{np.std(predictions["real"]):.2f}, Samples mean/std: {np.mean(predictions["samples"]):.2f}/{np.std(predictions["samples"]):.2f}'
     )
     fpr, tpr, roc_auc = get_roc_metrics(predictions["real"], predictions["samples"])
-    p, r, pr_auc = get_precision_recall_metrics(
-        predictions["real"], predictions["samples"]
-    )
+    p, r, pr_auc = get_precision_recall_metrics(predictions["real"], predictions["samples"])
     print(f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}")
 
     # results
@@ -363,9 +325,7 @@ def experiment(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--output_file", type=str, default="./exp_test/results/xsum_gpt2"
-    )
+    parser.add_argument("--output_file", type=str, default="./exp_test/results/xsum_gpt2")
     parser.add_argument("--dataset", type=str, default="xsum")
     parser.add_argument("--dataset_file", type=str, default="./exp_test/data/xsum_gpt2")
     parser.add_argument(

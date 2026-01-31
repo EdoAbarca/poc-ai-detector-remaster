@@ -11,21 +11,15 @@ from model import from_pretrained
 class T5Paraphraser:
     def __init__(self, args):
         self.device = args.device
-        self.tokenizer = from_pretrained(
-            AutoTokenizer, args.t5_model_name, {}, args.cache_dir
-        )
-        self.model = from_pretrained(
-            AutoModelForSeq2SeqLM, args.t5_model_name, {}, args.cache_dir
-        )
+        self.tokenizer = from_pretrained(AutoTokenizer, args.t5_model_name, {}, args.cache_dir)
+        self.model = from_pretrained(AutoModelForSeq2SeqLM, args.t5_model_name, {}, args.cache_dir)
         self.model = self.model.to(args.device)
         self.model.eval()
 
     def paraphrase(self, sents):
         parabatch = ["paraphrase: " + sent + " </s>" for sent in sents]
         encoding = self.tokenizer(parabatch, padding=True, return_tensors="pt")
-        input_ids, attention_masks = encoding["input_ids"].to(self.device), encoding[
-            "attention_mask"
-        ].to(self.device)
+        input_ids, attention_masks = encoding["input_ids"].to(self.device), encoding["attention_mask"].to(self.device)
         outputs = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_masks,
@@ -39,9 +33,7 @@ class T5Paraphraser:
         assert len(sents) == len(outputs)
         results = []
         for output, sent in zip(outputs, sents):
-            line = self.tokenizer.decode(
-                output, skip_special_tokens=True, clean_up_tokenization_spaces=True
-            )
+            line = self.tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True)
             line = line.strip()
             line = line if len(line) > 0 else sent
             results.append(line)
@@ -100,15 +92,11 @@ if __name__ == "__main__":
     from tqdm import tqdm
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--output_file", type=str, default="./exp_test/results/xsum_gpt2"
-    )
+    parser.add_argument("--output_file", type=str, default="./exp_test/results/xsum_gpt2")
     parser.add_argument("--dataset", type=str, default="xsum")
     parser.add_argument("--dataset_file", type=str, default="./exp_test/data/xsum_gpt2")
     parser.add_argument("--t5_model_name", type=str, default="Vamsi/T5_Paraphrase_Paws")
-    parser.add_argument(
-        "--paraphraser", type=str, default="t5", choices=["t5", "random"]
-    )
+    parser.add_argument("--paraphraser", type=str, default="t5", choices=["t5", "random"])
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--cache_dir", type=str, default="../cache")

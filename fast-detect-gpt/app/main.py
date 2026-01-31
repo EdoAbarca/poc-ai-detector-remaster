@@ -81,9 +81,7 @@ def detect():
 
         except subprocess.TimeoutExpired:
             return (
-                jsonify(
-                    {"error": "Inference timeout - processing took too long (>60s)"}
-                ),
+                jsonify({"error": "Inference timeout - processing took too long (>60s)"}),
                 504,
             )
         except json.JSONDecodeError as e:
@@ -106,12 +104,8 @@ def detect():
             data_response = {
                 "cuda_available": torch.cuda.is_available(),
                 "cuda_device_count": torch.cuda.device_count(),
-                "cuda_current_device": (
-                    torch.cuda.current_device() if torch.cuda.is_available() else None
-                ),
-                "cuda_device_name": (
-                    torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
-                ),
+                "cuda_current_device": (torch.cuda.current_device() if torch.cuda.is_available() else None),
+                "cuda_device_name": (torch.cuda.get_device_name(0) if torch.cuda.is_available() else None),
             }
             return jsonify(data_response), 200
         except Exception as e:

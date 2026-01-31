@@ -67,30 +67,20 @@ def get_sampling_discrepancy_analytic(logits_ref, logits_score, labels):
     probs_ref = torch.softmax(logits_ref, dim=-1)
     log_likelihood = lprobs_score.gather(dim=-1, index=labels).squeeze(-1)
     mean_ref = (probs_ref * lprobs_score).sum(dim=-1)
-    var_ref = (probs_ref * torch.square(lprobs_score)).sum(dim=-1) - torch.square(
-        mean_ref
-    )
-    discrepancy = (log_likelihood.sum(dim=-1) - mean_ref.sum(dim=-1)) / var_ref.sum(
-        dim=-1
-    ).sqrt()
+    var_ref = (probs_ref * torch.square(lprobs_score)).sum(dim=-1) - torch.square(mean_ref)
+    discrepancy = (log_likelihood.sum(dim=-1) - mean_ref.sum(dim=-1)) / var_ref.sum(dim=-1).sqrt()
     discrepancy = discrepancy.mean()
     return discrepancy.item()
 
 
 def experiment(args):
     # load model
-    scoring_tokenizer = load_tokenizer(
-        args.scoring_model_name, args.dataset, args.cache_dir
-    )
+    scoring_tokenizer = load_tokenizer(args.scoring_model_name, args.dataset, args.cache_dir)
     scoring_model = load_model(args.scoring_model_name, args.device, args.cache_dir)
     scoring_model.eval()
     if args.reference_model_name != args.scoring_model_name:
-        reference_tokenizer = load_tokenizer(
-            args.reference_model_name, args.dataset, args.cache_dir
-        )
-        reference_model = load_model(
-            args.reference_model_name, args.device, args.cache_dir
-        )
+        reference_tokenizer = load_tokenizer(args.reference_model_name, args.dataset, args.cache_dir)
+        reference_model = load_model(args.reference_model_name, args.device, args.cache_dir)
         reference_model.eval()
     # load data
     data = load_data(args.dataset_file)
@@ -129,15 +119,13 @@ def experiment(args):
                     padding=True,
                     return_token_type_ids=False,
                 ).to(args.device)
-                assert torch.all(
-                    tokenized.input_ids[:, 1:] == labels
-                ), "Tokenizer is mismatch."
+                assert torch.all(tokenized.input_ids[:, 1:] == labels), "Tokenizer is mismatch."
                 logits_ref = reference_model(**tokenized).logits[:, :-1]
             original_crit = criterion_fn(logits_ref, logits_score, labels)
         # sampled text
-        tokenized = scoring_tokenizer(
-            sampled_text, return_tensors="pt", padding=True, return_token_type_ids=False
-        ).to(args.device)
+        tokenized = scoring_tokenizer(sampled_text, return_tensors="pt", padding=True, return_token_type_ids=False).to(
+            args.device
+        )
         labels = tokenized.input_ids[:, 1:]
         with torch.no_grad():
             logits_score = scoring_model(**tokenized).logits[:, :-1]
@@ -150,9 +138,7 @@ def experiment(args):
                     padding=True,
                     return_token_type_ids=False,
                 ).to(args.device)
-                assert torch.all(
-                    tokenized.input_ids[:, 1:] == labels
-                ), "Tokenizer is mismatch."
+                assert torch.all(tokenized.input_ids[:, 1:] == labels), "Tokenizer is mismatch."
                 logits_ref = reference_model(**tokenized).logits[:, :-1]
             sampled_crit = criterion_fn(logits_ref, logits_score, labels)
         # result
@@ -174,9 +160,7 @@ def experiment(args):
         f'Real mean/std: {np.mean(predictions["real"]):.2f}/{np.std(predictions["real"]):.2f}, Samples mean/std: {np.mean(predictions["samples"]):.2f}/{np.std(predictions["samples"]):.2f}'
     )
     fpr, tpr, roc_auc = get_roc_metrics(predictions["real"], predictions["samples"])
-    p, r, pr_auc = get_precision_recall_metrics(
-        predictions["real"], predictions["samples"]
-    )
+    p, r, pr_auc = get_precision_recall_metrics(predictions["real"], predictions["samples"])
     print(f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}")
     # results
     results_file = f"{args.output_file}.{name}.json"
@@ -196,9 +180,7 @@ def experiment(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--output_file", type=str, default="./exp_test/results/xsum_gpt2"
-    )
+    parser.add_argument("--output_file", type=str, default="./exp_test/results/xsum_gpt2")
     parser.add_argument("--dataset", type=str, default="xsum")
     parser.add_argument("--dataset_file", type=str, default="./exp_test/data/xsum_gpt2")
     parser.add_argument("--reference_model_name", type=str, default="gpt2")

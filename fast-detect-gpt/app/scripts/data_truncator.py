@@ -16,12 +16,8 @@ def stats_str(data):
     else:
         mean_orig = np.mean([len(v["original"].split()) for v in data])
         mean_samp = np.mean([len(v["sampled"].split()) for v in data])
-        mean_perturb_orig = np.mean(
-            [np.mean([len(p.split()) for p in v["perturbed_original"]]) for v in data]
-        )
-        mean_perturb_samp = np.mean(
-            [np.mean([len(p.split()) for p in v["perturbed_sampled"]]) for v in data]
-        )
+        mean_perturb_orig = np.mean([np.mean([len(p.split()) for p in v["perturbed_original"]]) for v in data])
+        mean_perturb_samp = np.mean([np.mean([len(p.split()) for p in v["perturbed_sampled"]]) for v in data])
         return f"{mean_orig:.0f} words (original), {mean_samp:.0f} words (sampled), {mean_perturb_orig:.0f} words (perturb original), {mean_perturb_samp:.0f} words (perturb sampled)."
 
 
@@ -76,9 +72,7 @@ def convert_data(input_file, output_file, max_words):
         for item in data:
             item["original"] = _reduce(item["original"])
             item["sampled"] = _reduce(item["sampled"])
-            item["perturbed_original"] = [
-                _reduce(x) for x in item["perturbed_original"]
-            ]
+            item["perturbed_original"] = [_reduce(x) for x in item["perturbed_original"]]
             item["perturbed_sampled"] = [_reduce(x) for x in item["perturbed_sampled"]]
 
     save_data(output_file, args, data)

@@ -16,10 +16,18 @@ disable=
     C0301,  # line-too-long (handled by black)
     R0903,  # too-few-public-methods
     R0913,  # too-many-arguments
+    R0914,  # too-many-locals
+    R1705,  # no-else-return
+    R1716,  # chained-comparison
     W0212,  # protected-access
     W0511,  # fixme
+    W0718,  # broad-exception-caught
     R0801,  # duplicate-code
     E0401,  # import-error (false positives for installed packages)
+    E0611,  # no-name-in-module (false positives for dynamic imports)
+    E1121,  # too-many-function-args (false positives for dynamic functions)
+    C0123,  # unidiomatic-typecheck
+    C0206,  # consider-using-dict-items
     C0411,  # wrong-import-order
     C0412,  # ungrouped-imports
     C0415,  # import-outside-toplevel
@@ -27,7 +35,9 @@ disable=
     W0404,  # reimported
     W0621,  # redefined-outer-name
     W0613,  # unused-argument
+    W1309,  # f-string-without-interpolation
     W1514,  # unspecified-encoding (Python 3.11+ default)
+    R0402,  # consider-using-from-import
 
 [FORMAT]
 # Maximum number of characters on a single line
