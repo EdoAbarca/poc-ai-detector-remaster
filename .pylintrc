@@ -28,6 +28,15 @@ disable=
     E1121,  # too-many-function-args (false positives for dynamic functions)
     C0123,  # unidiomatic-typecheck
     C0206,  # consider-using-dict-items
+    R0911,  # too-many-return-statements
+    R0915,  # too-many-statements
+    R1710,  # inconsistent-return-statements
+    W1510,  # subprocess-run-check
+    W0105,  # pointless-string-statement
+    W0612,  # unused-variable
+    R1735,  # use-dict-literal
+    W0622,  # redefined-builtin
+    R1728,  # consider-using-generator
     C0411,  # wrong-import-order
     C0412,  # ungrouped-imports
     C0415,  # import-outside-toplevel

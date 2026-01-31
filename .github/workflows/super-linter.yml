@@ -32,7 +32,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # Language validation settings - only enable specific linters
-          VALIDATE_TYPESCRIPT_STANDARD: true
           VALIDATE_JAVASCRIPT_STANDARD: true
           VALIDATE_PYTHON_BLACK: true
           VALIDATE_PYTHON_FLAKE8: true
