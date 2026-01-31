@@ -173,7 +173,7 @@ test-backend-cov: ## Run backend tests with coverage
 
 test-fdgpt-cov: ## Run fast-detect-gpt tests with coverage
 	@echo "Running fast-detect-gpt tests with coverage..."
-	cd fast-detect-gpt && . .venv/bin/activate && pytest --cov=app --cov-report=term-missing
+	cd fast-detect-gpt && . .venv/bin/activate && pytest tests/ --cov=app --cov-report=term-missing
 
 ###############################################################################
 # Database Commands
