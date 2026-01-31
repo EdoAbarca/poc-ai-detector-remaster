@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   postgres:
     image: postgres:13
@@ -14,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - ia_network
+      - ai-detector-network
     volumes:
       - postgres_data:/var/lib/postgresql/data
   
@@ -25,43 +24,63 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - ia_network
+      - ai-detector-network
       
   backend:
     build:
       context: ./nest-backend
       dockerfile: Dockerfile
+      target: development
     container_name: nest-backend
     ports:
       - "3333:3333"
     depends_on:
       - postgres
     networks:
-      - ia_network
+      - ai-detector-network
     env_file:
       - ./nest-backend/.env
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./nest-backend:/app
+      - /app/node_modules
       
   frontend:
     build:
       context: ./react-frontend
       dockerfile: Dockerfile
+      target: development
     container_name: react-frontend
     ports:
       - "5173:5173"
     depends_on:
       - backend
     networks:
-      - ia_network
+      - ai-detector-network
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./react-frontend:/app
+      - /app/node_modules
       
-  fast-detect-gpt:
+  fdgpt:
     build:
       context: ./fast-detect-gpt
       dockerfile: Dockerfile
-    container_name: fast-detect-gpt
+      target: base
+    container_name: fdgpt
     ports:
-      - "8001:8001"
+      - "5000:8001"
     networks:
-      - ia_network
+      - ai-detector-network
+    environment:
+      - ENVIRONMENT=development
+      - FLASK_ENV=development
+    volumes:
+      - ./fast-detect-gpt/app:/app/app
+      - ./fast-detect-gpt/offload:/app/offload
+      - ./fast-detect-gpt/cache:/app/cache
     deploy:
       resources:
         reservations:
@@ -72,7 +91,7 @@ services:
 
 
 networks:
-  ia_network:
+  ai-detector-network:
 
 volumes:
   postgres_data:
