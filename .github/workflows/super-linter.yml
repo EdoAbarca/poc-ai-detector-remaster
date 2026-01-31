@@ -31,10 +31,8 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          # Language validation settings
-          VALIDATE_TYPESCRIPT_ES: false
+          # Language validation settings - only enable specific linters
           VALIDATE_TYPESCRIPT_STANDARD: true
-          VALIDATE_JAVASCRIPT_ES: false
           VALIDATE_JAVASCRIPT_STANDARD: true
           VALIDATE_PYTHON_BLACK: true
           VALIDATE_PYTHON_FLAKE8: true
@@ -42,9 +40,6 @@ jobs:
           VALIDATE_MARKDOWN: true
           VALIDATE_YAML: true
           VALIDATE_DOCKERFILE_HADOLINT: true
-
-          # Additional validation settings
-          VALIDATE_JSON: false
           VALIDATE_BASH: true
           VALIDATE_SHELL_SHFMT: true
 
