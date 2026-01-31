@@ -109,7 +109,7 @@ For hot-reload during development:
 
 - **Frontend**: `./react-frontend:/app` (excluding node_modules)
 - **Backend**: `./nest-backend:/app` (excluding node_modules)
-- **Fast-Detect-GPT**: 
+- **Fast-Detect-GPT**:
   - `./fast-detect-gpt/app:/app/app`
   - `./fast-detect-gpt/offload:/app/offload`
   - `./fast-detect-gpt/cache:/app/cache`
@@ -117,6 +117,7 @@ For hot-reload during development:
 ## GPU Requirements
 
 The `fdgpt` service requires:
+
 - NVIDIA GPU with CUDA support
 - NVIDIA Docker runtime installed
 - GPU drivers compatible with CUDA 12.1

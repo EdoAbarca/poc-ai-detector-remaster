@@ -1,0 +1,129 @@
+[MASTER]
+# Use multiple processes to speed up Pylint
+jobs=0
+
+# Pickle collected data for later comparisons
+persistent=yes
+
+# List of plugins (as comma separated values of python module names)
+load-plugins=
+
+[MESSAGES CONTROL]
+# Disable specific warnings that might be too strict for this project
+disable=
+    C0111,  # missing-docstring
+    C0103,  # invalid-name
+    C0301,  # line-too-long (handled by black)
+    R0903,  # too-few-public-methods
+    R0913,  # too-many-arguments
+    R0914,  # too-many-locals
+    R1705,  # no-else-return
+    R1716,  # chained-comparison
+    W0212,  # protected-access
+    W0511,  # fixme
+    W0718,  # broad-exception-caught
+    R0801,  # duplicate-code
+    E0401,  # import-error (false positives for installed packages)
+    E0611,  # no-name-in-module (false positives for dynamic imports)
+    E1121,  # too-many-function-args (false positives for dynamic functions)
+    C0123,  # unidiomatic-typecheck
+    C0206,  # consider-using-dict-items
+    R0911,  # too-many-return-statements
+    R0915,  # too-many-statements
+    R1710,  # inconsistent-return-statements
+    W1510,  # subprocess-run-check
+    W0105,  # pointless-string-statement
+    W0612,  # unused-variable
+    R1735,  # use-dict-literal
+    W0622,  # redefined-builtin
+    R1728,  # consider-using-generator
+    C0411,  # wrong-import-order
+    C0412,  # ungrouped-imports
+    C0415,  # import-outside-toplevel
+    W0611,  # unused-import
+    W0404,  # reimported
+    W0621,  # redefined-outer-name
+    W0613,  # unused-argument
+    W1309,  # f-string-without-interpolation
+    W1514,  # unspecified-encoding (Python 3.11+ default)
+    R0402,  # consider-using-from-import
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length=120
+
+# Maximum number of lines in a module
+max-module-lines=1000
+
+[BASIC]
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,id,db,pk
+
+# Regular expression matching correct function names
+function-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct variable names
+variable-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct constant names
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+
+# Regular expression matching correct attribute names
+attr-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct argument names
+argument-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct class attribute names
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+
+# Regular expression matching correct inline iteration names
+inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
+
+# Regular expression matching correct class names
+class-rgx=[A-Z_][a-zA-Z0-9]+$
+
+# Regular expression matching correct module names
+module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
+
+# Regular expression matching correct method names
+method-rgx=[a-z_][a-z0-9_]{2,30}$
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=10
+
+# Maximum number of attributes for a class
+max-attributes=15
+
+# Maximum number of boolean expressions in an if statement
+max-bool-expr=5
+
+# Maximum number of branch for function / method body
+max-branches=15
+
+# Maximum number of locals for function / method body
+max-locals=20
+
+# Maximum number of parents for a class
+max-parents=7
+
+# Maximum number of public methods for a class
+max-public-methods=20
+
+# Maximum number of return / yield for function / method body
+max-returns=6
+
+# Maximum number of statements in function / method body
+max-statements=50
+
+# Minimum number of public methods for a class
+min-public-methods=0
+
+[IMPORTS]
+# Allow wildcard imports from modules
+allow-wildcard-with-all=no
+
+[EXCEPTIONS]
+# Exceptions that will emit a warning when being caught
+overgeneral-exceptions=builtins.Exception
