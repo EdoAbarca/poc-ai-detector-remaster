@@ -16,6 +16,7 @@ AI-generated content detection project using multiple detection methods.
 ## Technology Stack
 
 ### Frontend (react-frontend)
+
 - **Framework**: React 19 with Vite 7
 - **Styling**: TailwindCSS 4
 - **Routing**: React Router DOM 7
@@ -25,6 +26,7 @@ AI-generated content detection project using multiple detection methods.
 - **Testing**: Vitest
 
 ### Backend (nest-backend)
+
 - **Framework**: NestJS
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: @nestjs/jwt, @nestjs/passport, passport-jwt
@@ -33,6 +35,7 @@ AI-generated content detection project using multiple detection methods.
 - **Testing**: Jest (comes with NestJS)
 
 ### Fast Detect GPT Service (fast-detect-gpt)
+
 - **Framework**: Flask
 - **Environment Management**: uv
 - **Dependencies**: pyproject.toml with hashed requirements.txt
@@ -40,6 +43,7 @@ AI-generated content detection project using multiple detection methods.
 - **Deployment**: CUDA-enabled Docker container
 
 ### Database
+
 - **PostgreSQL 13**: Running in Docker container
 
 ## Prerequisites
@@ -60,6 +64,7 @@ make install
 ```
 
 This will:
+
 - Install frontend dependencies with pnpm
 - Install backend dependencies with pnpm
 - Generate Prisma client
@@ -175,7 +180,9 @@ Check GPU availability and system status.
 ## Development Notes
 
 ### Fast Detect GPT Migration
+
 The Fast Detect GPT service was migrated from Django to Flask while maintaining the original REST API logic. Key changes:
+
 - Replaced Django REST Framework with Flask
 - Implemented uv for Python environment management
 - Configured pyproject.toml for dependency management
@@ -183,11 +190,13 @@ The Fast Detect GPT service was migrated from Django to Flask while maintaining 
 - Maintained compatibility with existing inference scripts
 
 ### Frontend
+
 - Uses Vite for fast development and optimized production builds
 - TailwindCSS 4 for utility-first styling
 - Configured with PostCSS for CSS processing
 
 ### Backend
+
 - Follows NestJS best practices with modular architecture
 - Prisma for type-safe database access
 - JWT-based authentication ready for implementation
@@ -213,16 +222,19 @@ make test-backend
 ## Troubleshooting
 
 ### PostgreSQL Connection Issues
+
 - Ensure PostgreSQL container is running: `docker ps`
 - Check logs: `make logs`
 - Verify environment variables in `nest-backend/.env`
 
 ### Frontend Not Loading
+
 - Check if port 5173 is available
 - Verify Node.js version: `node --version` (should be 20+)
 - Clear node_modules and reinstall: `cd react-frontend && rm -rf node_modules && pnpm install`
 
 ### Fast Detect GPT GPU Issues
+
 - Verify NVIDIA drivers: `nvidia-smi`
 - Check CUDA availability in container
 - Ensure Docker has GPU support enabled
@@ -235,9 +247,9 @@ See individual service directories for license information.
 
 This project implements **US-000: Initialize Project Structure** with the following acceptance criteria:
 
-✅ Frontend project initialized with React + Vite + TailwindCSS  
-✅ Backend project initialized with NestJS + Prisma  
-✅ Fast Detect GPT service structure is set with UV, pyproject.toml, hashed requirements.txt and Flask  
-✅ PostgreSQL database is configured  
-✅ All three services can run independently  
-✅ Project follows monorepo structure  
+- ✅ Frontend project initialized with React + Vite + TailwindCSS
+- ✅ Backend project initialized with NestJS + Prisma
+- ✅ Fast Detect GPT service structure is set with UV, pyproject.toml, hashed requirements.txt and Flask
+- ✅ PostgreSQL database is configured
+- ✅ All three services can run independently
+- ✅ Project follows monorepo structure

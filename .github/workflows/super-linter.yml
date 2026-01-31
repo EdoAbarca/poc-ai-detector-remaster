@@ -56,6 +56,9 @@ jobs:
           VALIDATE_BASH: true
           VALIDATE_SHELL_SHFMT: true
           
+          # Exclude patterns - ignore build artifacts and dependencies
+          FILTER_REGEX_EXCLUDE: .*/(dist|build|node_modules|\.venv|__pycache__|\.git)/.*
+          
           # Linter rules locations
           LINTER_RULES_PATH: /
           TYPESCRIPT_ES_CONFIG_FILE: nest-backend/eslint.config.mjs

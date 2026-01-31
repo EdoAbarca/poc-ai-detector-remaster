@@ -7,7 +7,9 @@ This document proposes migrating the `fast-detect-gpt` service to a dedicated GP
 ## Architecture Overview
 
 ### Proposed Solution
+
 Deploy the entire REST API with GPU acceleration in a cloud environment, with the following components:
+
 - **API Gateway**: Handle incoming requests and load balancing
 - **GPU-Powered Container**: Run the fast-detect-gpt model inference
 - **Storage**: Model weights and cache layer
@@ -20,6 +22,7 @@ Deploy the entire REST API with GPU acceleration in a cloud environment, with th
 ### 1. **RunPod** (Recommended for Flexibility)
 
 #### Features
+
 - Specialized in GPU compute for ML workloads
 - Serverless and dedicated GPU options
 - Pre-configured ML environments
@@ -27,6 +30,7 @@ Deploy the entire REST API with GPU acceleration in a cloud environment, with th
 #### Pricing Models
 
 **Pay-As-You-Go (Serverless)**
+
 - RTX 3090 (24GB): ~$0.39/hour (~$0.00011/second)
 - RTX 4090 (24GB): ~$0.49/hour (~$0.00014/second)
 - A4000 (16GB): ~$0.29/hour (~$0.00008/second)
@@ -34,6 +38,7 @@ Deploy the entire REST API with GPU acceleration in a cloud environment, with th
 - **Ideal for**: Variable traffic, development, testing
 
 **Dedicated Instances**
+
 - RTX 3090: ~$0.34/hour (~$244/month)
 - RTX 4090: ~$0.44/hour (~$317/month)
 - A6000 (48GB): ~$0.79/hour (~$569/month)
@@ -57,6 +62,7 @@ ports: "8000/http"
 ### 2. **Modal** (Recommended for Simplicity)
 
 #### Features
+
 - Python-native serverless platform
 - Automatic scaling and GPU allocation
 - Built-in container management
@@ -64,6 +70,7 @@ ports: "8000/http"
 #### Pricing Models
 
 **Pay-As-You-Go (Serverless Only)**
+
 - T4 (16GB): ~$0.60/hour compute + $0.0001/second idle
 - A10G (24GB): ~$1.10/hour compute + $0.0002/second idle
 - A100 (40GB): ~$3.00/hour compute + $0.0005/second idle
@@ -97,6 +104,7 @@ def detect_ai_text(text: str):
 ### 3. **AWS SageMaker** (Enterprise Option)
 
 #### Features
+
 - Fully managed ML platform
 - Integration with AWS ecosystem
 - Auto-scaling and monitoring
@@ -104,15 +112,18 @@ def detect_ai_text(text: str):
 #### Pricing Models
 
 **On-Demand Instances**
+
 - ml.g4dn.xlarge (T4, 16GB): ~$0.736/hour (~$530/month)
 - ml.g5.xlarge (A10G, 24GB): ~$1.408/hour (~$1,014/month)
 - ml.p3.2xlarge (V100, 16GB): ~$3.825/hour (~$2,754/month)
 
 **Savings Plans (1-3 year commitment)**
+
 - Up to 64% savings on compute
 - ml.g4dn.xlarge: ~$0.265/hour (~$191/month)
 
 **Serverless Inference**
+
 - Pay per inference: $0.20 per million inferences
 - Memory: $0.0000133 per GB-second
 - **Ideal for**: Variable traffic with AWS infrastructure
@@ -138,6 +149,7 @@ predictor = model.deploy(initial_instance_count=1)
 ### 4. **Google Cloud Run + GPU** (Beta)
 
 #### Features
+
 - Serverless containers with GPU support (Preview)
 - Pay only for request processing time
 - Automatic scaling from 0
@@ -145,6 +157,7 @@ predictor = model.deploy(initial_instance_count=1)
 #### Pricing Models
 
 **Pay-As-You-Go**
+
 - T4 GPU: ~$0.35/hour + $0.00002/request
 - Container: $0.00002400/vCPU-second + $0.00000250/GiB-second
 - Minimum billing: 100ms per request
@@ -155,6 +168,7 @@ predictor = model.deploy(initial_instance_count=1)
 ### 5. **Replicate** (Easiest Deployment)
 
 #### Features
+
 - Deploy ML models with simple API
 - Automatic scaling and model versioning
 - Pay per prediction
@@ -162,6 +176,7 @@ predictor = model.deploy(initial_instance_count=1)
 #### Pricing Models
 
 **Pay-Per-Prediction**
+
 - Nvidia T4: ~$0.000225/second of compute
 - Nvidia A40: ~$0.000575/second of compute
 - Minimum charge: ~1 second per prediction
@@ -212,21 +227,27 @@ predict: "predict.py:Predictor"
 ## Recommendations
 
 ### For Development & Testing
+
 **Choose: Modal or RunPod Serverless**
+
 - Quick deployment
 - No upfront costs
 - Easy scaling for experiments
 - Estimated cost: $20-50/month
 
 ### For Production (Low-Medium Traffic)
+
 **Choose: RunPod Dedicated or AWS Serverless**
+
 - RunPod: Best value for 24/7 availability ($244/month)
 - AWS: Better if already using AWS ecosystem
 - Consistent performance
 - Estimated cost: $200-400/month
 
 ### For Production (High Traffic)
+
 **Choose: AWS SageMaker with Savings Plan**
+
 - Enterprise-grade reliability
 - Integration with monitoring/logging
 - Auto-scaling capabilities
@@ -234,7 +255,9 @@ predict: "predict.py:Predictor"
 - Estimated cost: $200-500/month with commitment
 
 ### For Rapid Prototyping
+
 **Choose: Replicate**
+
 - Deploy in minutes
 - No infrastructure management
 - Simple API integration
@@ -245,18 +268,21 @@ predict: "predict.py:Predictor"
 ## Implementation Roadmap
 
 ### Phase 1: Setup & Testing (Week 1-2)
+
 1. Set up RunPod/Modal account
 2. Containerize the fast-detect-gpt API
 3. Deploy to serverless environment
 4. Load testing and optimization
 
 ### Phase 2: Integration (Week 3)
+
 1. Update main application to call GPU service
 2. Implement error handling and retries
 3. Add monitoring and logging
 4. Cost tracking dashboard
 
 ### Phase 3: Production (Week 4)
+
 1. Deploy to production environment
 2. Configure auto-scaling policies
 3. Set up alerts and monitoring
@@ -313,18 +339,22 @@ async def health():
 ## Risk Mitigation
 
 ### Cold Start Latency
+
 - **Solution**: Use RunPod dedicated instances or keep Modal containers warm
 - **Alternative**: Implement request queuing for serverless
 
 ### Cost Overruns
+
 - **Solution**: Set billing alerts and rate limiting
 - **Alternative**: Implement request caching for repeated texts
 
 ### Model Updates
+
 - **Solution**: Use container versioning and blue-green deployment
 - **Alternative**: A/B testing framework for model improvements
 
 ### Availability
+
 - **Solution**: Multi-region deployment with failover
 - **Alternative**: Hybrid approach with fallback to CPU processing
 
@@ -335,6 +365,7 @@ async def health():
 **Primary Recommendation: Start with RunPod Serverless, migrate to Dedicated for production**
 
 This approach provides:
+
 - ✅ Low initial investment
 - ✅ Quick deployment (days, not weeks)
 - ✅ Scalability path to dedicated GPUs
@@ -342,6 +373,7 @@ This approach provides:
 - ✅ Easy migration to other providers if needed
 
 **Estimated Monthly Costs:**
+
 - Development: $20-50
 - Production (low traffic): $200-300
 - Production (high traffic): $300-500
