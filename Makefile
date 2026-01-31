@@ -105,6 +105,26 @@ build: ## Build all Docker containers
 	docker compose build
 	@echo "✓ Build complete!"
 
+build-prod: ## Build all Docker containers for production
+	@echo "Building all Docker containers for production..."
+	docker compose -f docker-compose.prod.yml build
+	@echo "✓ Production build complete!"
+
+start-prod: ## Start all services in production mode
+	@echo "Starting all services in production mode..."
+	docker compose -f docker-compose.prod.yml up -d
+	@echo "✓ All services started in production mode!"
+	@echo "Frontend: http://localhost:80"
+	@echo "Backend: http://localhost:3333"
+	@echo "Fast-Detect-GPT: http://localhost:5000"
+	@echo "PostgreSQL: localhost:5432"
+	@echo "Redis: localhost:6379"
+
+stop-prod: ## Stop all production services
+	@echo "Stopping all production services..."
+	docker compose -f docker-compose.prod.yml down
+	@echo "✓ All production services stopped!"
+
 restart: ## Restart all services
 	@echo "Restarting all services..."
 	docker compose restart
