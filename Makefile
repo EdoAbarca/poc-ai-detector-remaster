@@ -159,9 +159,21 @@ test-frontend: ## Run frontend tests
 	@echo "Running frontend tests..."
 	cd react-frontend && pnpm test
 
+test-frontend-cov: ## Run frontend tests with coverage
+	@echo "Running frontend tests with coverage..."
+	cd react-frontend && pnpm test:cov
+
 test-backend: ## Run backend tests
 	@echo "Running backend tests..."
 	cd nest-backend && pnpm test
+
+test-backend-cov: ## Run backend tests with coverage
+	@echo "Running backend tests with coverage..."
+	cd nest-backend && pnpm run test:cov
+
+test-fdgpt-cov: ## Run fast-detect-gpt tests with coverage
+	@echo "Running fast-detect-gpt tests with coverage..."
+	cd fast-detect-gpt && . .venv/bin/activate && pytest --cov=app --cov-report=term-missing
 
 ###############################################################################
 # Database Commands
