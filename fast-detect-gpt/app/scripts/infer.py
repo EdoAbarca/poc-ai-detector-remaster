@@ -26,11 +26,7 @@ class ProbEstimator:
         prob_files = os.listdir(prob_path)
 
         # Filter out JSON files
-        json_files = [
-            os.path.join(prob_path, file)
-            for file in prob_files
-            if file.endswith(".json")
-        ]
+        json_files = [os.path.join(prob_path, file) for file in prob_files if file.endswith(".json")]
 
         # for result_file in glob.glob(os.path.join(args.ref_path, "*.json")):
         for result_file in json_files:
@@ -43,17 +39,9 @@ class ProbEstimator:
         print(f"ProbEstimator: total {len(self.real_crits) * 2} samples.")
 
     def crit_to_prob(self, crit):
-        offset = np.sort(np.abs(np.array(self.real_crits + self.fake_crits) - crit))[
-            100
-        ]
-        cnt_real = np.sum(
-            (np.array(self.real_crits) > crit - offset)
-            & (np.array(self.real_crits) < crit + offset)
-        )
-        cnt_fake = np.sum(
-            (np.array(self.fake_crits) > crit - offset)
-            & (np.array(self.fake_crits) < crit + offset)
-        )
+        offset = np.sort(np.abs(np.array(self.real_crits + self.fake_crits) - crit))[100]
+        cnt_real = np.sum((np.array(self.real_crits) > crit - offset) & (np.array(self.real_crits) < crit + offset))
+        cnt_fake = np.sum((np.array(self.fake_crits) > crit - offset) & (np.array(self.fake_crits) < crit + offset))
         return cnt_fake / (cnt_real + cnt_fake)
 
 
@@ -65,37 +53,27 @@ def run(args):
     scoring_tokenizer = load_tokenizer(args.scoring_model_name, args, args.cache_dir)
 
     if args.reference_model_name != args.scoring_model_name:
-        reference_tokenizer = load_tokenizer(
-            args.reference_model_name, args.dataset, args.cache_dir
-        )
-        reference_model = load_model(
-            args.reference_model_name, args.device, args.cache_dir
-        )
+        reference_tokenizer = load_tokenizer(args.reference_model_name, args.dataset, args.cache_dir)
+        reference_model = load_model(args.reference_model_name, args.device, args.cache_dir)
         reference_model.eval()
     # evaluate criterion
     criterion_fn = get_sampling_discrepancy_analytic
     prob_estimator = ProbEstimator(args)
     # input text
-    print(
-        "Local demo for Fast-DetectGPT, where the longer text has more reliable result."
-    )
+    print("Local demo for Fast-DetectGPT, where the longer text has more reliable result.")
     print("")
     text = args.text
-    tokenized = scoring_tokenizer(
-        text, return_tensors="pt", padding=True, return_token_type_ids=False
-    ).to(args.device)
+    tokenized = scoring_tokenizer(text, return_tensors="pt", padding=True, return_token_type_ids=False).to(args.device)
     labels = tokenized.input_ids[:, 1:]
     with torch.no_grad():
         logits_score = scoring_model(**tokenized).logits[:, :-1]
         if args.reference_model_name == args.scoring_model_name:
             logits_ref = logits_score
         else:
-            tokenized = reference_tokenizer(
-                text, return_tensors="pt", padding=True, return_token_type_ids=False
-            ).to(args.device)
-            assert torch.all(
-                tokenized.input_ids[:, 1:] == labels
-            ), "Tokenizer is mismatch."
+            tokenized = reference_tokenizer(text, return_tensors="pt", padding=True, return_token_type_ids=False).to(
+                args.device
+            )
+            assert torch.all(tokenized.input_ids[:, 1:] == labels), "Tokenizer is mismatch."
             logits_ref = reference_model(**tokenized).logits[:, :-1]
         crit = criterion_fn(logits_ref, logits_score, labels)
     # estimate the probability of machine generated text

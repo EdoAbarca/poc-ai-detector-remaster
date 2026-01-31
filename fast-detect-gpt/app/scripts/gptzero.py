@@ -65,12 +65,8 @@ def experiment(args):
             f'Real mean/std: {np.mean(predictions["real"]):.2f}/{np.std(predictions["real"]):.2f}, Samples mean/std: {np.mean(predictions["samples"]):.2f}/{np.std(predictions["samples"]):.2f}'
         )
         fpr, tpr, roc_auc = get_roc_metrics(predictions["real"], predictions["samples"])
-        p, r, pr_auc = get_precision_recall_metrics(
-            predictions["real"], predictions["samples"]
-        )
-        print(
-            f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}"
-        )
+        p, r, pr_auc = get_precision_recall_metrics(predictions["real"], predictions["samples"])
+        print(f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}")
 
     # results
     results_file = f"{args.output_file}.{name}.json"
@@ -90,13 +86,9 @@ def experiment(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--output_file", type=str, default="./exp_gpt3to4/results/xsum_gpt-4"
-    )
+    parser.add_argument("--output_file", type=str, default="./exp_gpt3to4/results/xsum_gpt-4")
     parser.add_argument("--dataset", type=str, default="xsum")
-    parser.add_argument(
-        "--dataset_file", type=str, default="./exp_gpt3to4/data/xsum_gpt-4"
-    )
+    parser.add_argument("--dataset_file", type=str, default="./exp_gpt3to4/data/xsum_gpt-4")
     args = parser.parse_args()
 
     experiment(args)

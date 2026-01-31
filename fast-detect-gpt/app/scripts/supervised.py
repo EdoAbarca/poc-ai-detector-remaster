@@ -17,9 +17,7 @@ from model import from_pretrained
 def experiment(args):
     # load model
     print(f"Beginning supervised evaluation with {args.model_name}...")
-    detector = from_pretrained(
-        AutoModelForSequenceClassification, args.model_name, {}, args.cache_dir
-    ).to(args.device)
+    detector = from_pretrained(AutoModelForSequenceClassification, args.model_name, {}, args.cache_dir).to(args.device)
     tokenizer = from_pretrained(AutoTokenizer, args.model_name, {}, args.cache_dir)
     detector.eval()
     # load data
@@ -69,9 +67,7 @@ def experiment(args):
         "samples": [x["sampled_crit"] for x in eval_results],
     }
     fpr, tpr, roc_auc = get_roc_metrics(predictions["real"], predictions["samples"])
-    p, r, pr_auc = get_precision_recall_metrics(
-        predictions["real"], predictions["samples"]
-    )
+    p, r, pr_auc = get_precision_recall_metrics(predictions["real"], predictions["samples"])
     print(f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}")
     # log results
     results_file = f"{args.output_file}.{name}.json"
@@ -91,14 +87,10 @@ def experiment(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--output_file", type=str, default="./exp_test/results/xsum_gpt2"
-    )
+    parser.add_argument("--output_file", type=str, default="./exp_test/results/xsum_gpt2")
     parser.add_argument("--dataset", type=str, default="xsum")
     parser.add_argument("--dataset_file", type=str, default="./exp_test/data/xsum_gpt2")
-    parser.add_argument(
-        "--model_name", type=str, default="roberta-base-openai-detector"
-    )
+    parser.add_argument("--model_name", type=str, default="roberta-base-openai-detector")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--cache_dir", type=str, default="../cache")

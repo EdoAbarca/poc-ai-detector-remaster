@@ -39,14 +39,8 @@ def load_data(input_file):
 class DataBuilder:
     def __init__(self, args):
         self.args = args
-        self.base_tokenizer = load_tokenizer(
-            args.base_model_name, args.dataset, args.cache_dir
-        )
-        self.base_model = (
-            None
-            if args.openai_model
-            else load_model(args.base_model_name, args.device, args.cache_dir)
-        )
+        self.base_tokenizer = load_tokenizer(args.base_model_name, args.dataset, args.cache_dir)
+        self.base_model = None if args.openai_model else load_model(args.base_model_name, args.device, args.cache_dir)
 
     def _openai_sample(self, prefix):
         def _drop_last_word(text):
@@ -54,9 +48,7 @@ class DataBuilder:
 
         import openai
 
-        assert (
-            self.args.openai_key is not None
-        ), "Must provide OpenAI API key as --openai_key"
+        assert self.args.openai_key is not None, "Must provide OpenAI API key as --openai_key"
         openai.api_key = self.args.openai_key
         if self.args.openai_base is not None:
             openai.api_base = self.args.openai_base
@@ -110,22 +102,18 @@ class DataBuilder:
         # encode each text as a list of token ids
         if self.args.dataset == "pubmed":
             texts = [t[: t.index(custom_datasets.SEPARATOR)] for t in texts]
-            all_encoded = self.base_tokenizer(
-                texts, return_tensors="pt", padding=True, return_token_type_ids=False
-            ).to(self.args.device)
+            all_encoded = self.base_tokenizer(texts, return_tensors="pt", padding=True, return_token_type_ids=False).to(
+                self.args.device
+            )
         else:
-            all_encoded = self.base_tokenizer(
-                texts, return_tensors="pt", padding=True, return_token_type_ids=False
-            ).to(self.args.device)
-            all_encoded = {
-                key: value[:, :prompt_tokens] for key, value in all_encoded.items()
-            }
+            all_encoded = self.base_tokenizer(texts, return_tensors="pt", padding=True, return_token_type_ids=False).to(
+                self.args.device
+            )
+            all_encoded = {key: value[:, :prompt_tokens] for key, value in all_encoded.items()}
 
         if self.args.openai_model:
             # decode the prefixes back into text
-            prefixes = self.base_tokenizer.batch_decode(
-                all_encoded["input_ids"], skip_special_tokens=True
-            )
+            prefixes = self.base_tokenizer.batch_decode(all_encoded["input_ids"], skip_special_tokens=True)
 
             decoded = []
             for idx, prefix in enumerate(prefixes):
@@ -148,12 +136,8 @@ class DataBuilder:
             while m < min_words:
                 if tries != 0:
                     print()
-                    print(
-                        f"min words: {m}, needed {min_words}, regenerating (try {tries})"
-                    )
-                    prefixes = self.base_tokenizer.batch_decode(
-                        all_encoded["input_ids"], skip_special_tokens=True
-                    )
+                    print(f"min words: {m}, needed {min_words}, regenerating (try {tries})")
+                    prefixes = self.base_tokenizer.batch_decode(all_encoded["input_ids"], skip_special_tokens=True)
                     for prefix, x in zip(prefixes, decoded):
                         if len(x.split()) == m:
                             print(prefix, "=>", x)
@@ -175,9 +159,7 @@ class DataBuilder:
                     pad_token_id=self.base_tokenizer.eos_token_id,
                     eos_token_id=self.base_tokenizer.eos_token_id,
                 )
-                decoded = self.base_tokenizer.batch_decode(
-                    outputs, skip_special_tokens=True
-                )
+                decoded = self.base_tokenizer.batch_decode(outputs, skip_special_tokens=True)
                 m = min(len(x.split()) for x in decoded)
                 tries += 1
 
@@ -208,9 +190,7 @@ class DataBuilder:
         }
 
         for batch in range(len(raw_data) // batch_size):
-            print(
-                "Generating samples for batch", batch, "of", len(raw_data) // batch_size
-            )
+            print("Generating samples for batch", batch, "of", len(raw_data) // batch_size)
             original_text = raw_data[batch * batch_size : (batch + 1) * batch_size]
             sampled_text = self._sample_from_model(
                 original_text, min_words=30 if self.args.dataset in ["pubmed"] else 55
@@ -239,9 +219,7 @@ def generate_data(args, dataset, key):
     if dataset in custom_datasets.DATASETS:
         data = custom_datasets.load(dataset, args.cache_dir)
     else:
-        data = custom_datasets.load_dataset(
-            dataset, split="train", cache_dir=args.cache_dir
-        )[key]
+        data = custom_datasets.load_dataset(dataset, split="train", cache_dir=args.cache_dir)[key]
 
     # get unique examples, strip whitespace, and remove newlines
     # then take just the long examples, shuffle, take the first 5,000 to tokenize to save time
@@ -276,9 +254,7 @@ def generate_data(args, dataset, key):
     print(f"Total number of samples: {len(data)}")
     print(f"Average number of words: {np.mean([len(x.split()) for x in data])}")
 
-    return data_builder.generate_samples(
-        data[: args.n_samples], batch_size=args.batch_size
-    )
+    return data_builder.generate_samples(data[: args.n_samples], batch_size=args.batch_size)
 
 
 if __name__ == "__main__":
@@ -288,9 +264,7 @@ if __name__ == "__main__":
     parser.add_argument("--n_samples", type=int, default=200)
     parser.add_argument("--openai_base", type=str, default=None)
     parser.add_argument("--openai_key", type=str, default=None)
-    parser.add_argument(
-        "--openai_model", type=str, default=None
-    )  # davinci, gpt-3.5-turbo, gpt-4
+    parser.add_argument("--openai_model", type=str, default=None)  # davinci, gpt-3.5-turbo, gpt-4
     parser.add_argument("--base_model_name", type=str, default="gpt2")
     parser.add_argument("--batch_size", type=int, default=50)
     parser.add_argument("--do_top_k", action="store_true")

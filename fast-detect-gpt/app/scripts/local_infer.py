@@ -27,44 +27,28 @@ class ProbEstimator:
         print(f"ProbEstimator: total {len(self.real_crits) * 2} samples.")
 
     def crit_to_prob(self, crit):
-        offset = np.sort(np.abs(np.array(self.real_crits + self.fake_crits) - crit))[
-            100
-        ]
-        cnt_real = np.sum(
-            (np.array(self.real_crits) > crit - offset)
-            & (np.array(self.real_crits) < crit + offset)
-        )
-        cnt_fake = np.sum(
-            (np.array(self.fake_crits) > crit - offset)
-            & (np.array(self.fake_crits) < crit + offset)
-        )
+        offset = np.sort(np.abs(np.array(self.real_crits + self.fake_crits) - crit))[100]
+        cnt_real = np.sum((np.array(self.real_crits) > crit - offset) & (np.array(self.real_crits) < crit + offset))
+        cnt_fake = np.sum((np.array(self.fake_crits) > crit - offset) & (np.array(self.fake_crits) < crit + offset))
         return cnt_fake / (cnt_real + cnt_fake)
 
 
 # run interactive local inference
 def run(args):
     # load model
-    scoring_tokenizer = load_tokenizer(
-        args.scoring_model_name, args.dataset, args.cache_dir
-    )
+    scoring_tokenizer = load_tokenizer(args.scoring_model_name, args.dataset, args.cache_dir)
     scoring_model = load_model(args.scoring_model_name, args.device, args.cache_dir)
     scoring_model.eval()
     if args.reference_model_name != args.scoring_model_name:
-        reference_tokenizer = load_tokenizer(
-            args.reference_model_name, args.dataset, args.cache_dir
-        )
-        reference_model = load_model(
-            args.reference_model_name, args.device, args.cache_dir
-        )
+        reference_tokenizer = load_tokenizer(args.reference_model_name, args.dataset, args.cache_dir)
+        reference_model = load_model(args.reference_model_name, args.device, args.cache_dir)
         reference_model.eval()
     # evaluate criterion
     name = "sampling_discrepancy_analytic"
     criterion_fn = get_sampling_discrepancy_analytic
     prob_estimator = ProbEstimator(args)
     # input text
-    print(
-        "Local demo for Fast-DetectGPT, where the longer text has more reliable result."
-    )
+    print("Local demo for Fast-DetectGPT, where the longer text has more reliable result.")
     print("")
     while True:
         print("Please enter your text: (Press Enter twice to start processing)")
@@ -78,9 +62,9 @@ def run(args):
         if len(text) == 0:
             break
         # evaluate text
-        tokenized = scoring_tokenizer(
-            text, return_tensors="pt", padding=True, return_token_type_ids=False
-        ).to(args.device)
+        tokenized = scoring_tokenizer(text, return_tensors="pt", padding=True, return_token_type_ids=False).to(
+            args.device
+        )
         labels = tokenized.input_ids[:, 1:]
         with torch.no_grad():
             logits_score = scoring_model(**tokenized).logits[:, :-1]
@@ -90,9 +74,7 @@ def run(args):
                 tokenized = reference_tokenizer(
                     text, return_tensors="pt", padding=True, return_token_type_ids=False
                 ).to(args.device)
-                assert torch.all(
-                    tokenized.input_ids[:, 1:] == labels
-                ), "Tokenizer is mismatch."
+                assert torch.all(tokenized.input_ids[:, 1:] == labels), "Tokenizer is mismatch."
                 logits_ref = reference_model(**tokenized).logits[:, :-1]
             crit = criterion_fn(logits_ref, logits_score, labels)
         # estimate the probability of machine generated text

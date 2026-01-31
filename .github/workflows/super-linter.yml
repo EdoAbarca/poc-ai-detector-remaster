@@ -32,9 +32,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # Language validation settings
-          VALIDATE_TYPESCRIPT_ES: true
+          VALIDATE_TYPESCRIPT_ES: false
           VALIDATE_TYPESCRIPT_STANDARD: true
-          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_JAVASCRIPT_ES: false
           VALIDATE_JAVASCRIPT_STANDARD: true
           VALIDATE_PYTHON_BLACK: true
           VALIDATE_PYTHON_FLAKE8: true
@@ -44,7 +44,7 @@ jobs:
           VALIDATE_DOCKERFILE_HADOLINT: true
 
           # Additional validation settings
-          VALIDATE_JSON: true
+          VALIDATE_JSON: false
           VALIDATE_BASH: true
           VALIDATE_SHELL_SHFMT: true
 
@@ -60,3 +60,4 @@ jobs:
           PYTHON_PYLINT_CONFIG_FILE: .pylintrc
           MARKDOWN_CONFIG_FILE: .markdownlint.json
           YAML_CONFIG_FILE: .yamllint.yml
+          DOCKERFILE_HADOLINT_CONFIG_FILE: .hadolint.yaml

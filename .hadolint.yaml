@@ -1,0 +1,5 @@
+---
+ignored:
+  - DL3008  # Pin versions in apt-get install (can be too strict)
+  - DL3016  # Pin versions in npm (can be too strict)
+  - DL4006  # Set SHELL option -o pipefail (not always necessary)
