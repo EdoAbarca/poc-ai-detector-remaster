@@ -22,15 +22,14 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 
 # Install UV for fast package management
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.cargo/bin:$PATH"
 
 WORKDIR /app
 
 # Copy dependency files
 COPY pyproject.toml requirements.txt ./
 
-# Install dependencies using UV (faster than pip)
-RUN uv pip install --system -r requirements.txt
+# Install dependencies using UV (faster than pip) - using the full path to uv
+RUN /root/.cargo/bin/uv pip install --system -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
