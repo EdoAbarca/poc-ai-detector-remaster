@@ -1,7 +1,7 @@
 ---
 name: Super Linter
 
-on:
+"on":
   pull_request:
     branches:
       - main
@@ -49,7 +49,9 @@ jobs:
           VALIDATE_SHELL_SHFMT: true
 
           # Exclude patterns - ignore build artifacts, dependencies, and lock files
-          FILTER_REGEX_EXCLUDE: .*/(dist|build|node_modules|\.venv|__pycache__|\.git)/.*|.*pnpm-lock\.yaml|.*\.d\.ts|.*/tempCodeRunnerFile\.py
+          FILTER_REGEX_EXCLUDE: >-
+            .*/(dist|build|node_modules|\.venv|__pycache__|\.git)/.*|
+            .*pnpm-lock\.yaml|.*\.d\.ts|.*/tempCodeRunnerFile\.py
 
           # Linter rules locations
           LINTER_RULES_PATH: /

@@ -24,13 +24,17 @@ exclude =
 # W504: line break after binary operator
 # E266: too many leading hashes for block comment
 # E402: module level import not at top of file
+# C901: function too complex (handled by pylint)
+# F541: f-string without placeholders
 ignore =
     E203,
     E501,
     W503,
     W504,
     E266,
-    E402
+    E402,
+    C901,
+    F541
 
 # Maximum complexity
 max-complexity = 10
