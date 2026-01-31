@@ -1,0 +1,42 @@
+[flake8]
+# Maximum line length
+max-line-length = 120
+
+# List of files and directories to exclude
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    node_modules,
+    build,
+    dist,
+    *.egg-info,
+    .pytest_cache,
+    .mypy_cache,
+    .tox
+
+# Error codes to ignore
+ignore =
+    E203,  # whitespace before ':'
+    E501,  # line too long (handled by black)
+    W503,  # line break before binary operator
+    W504,  # line break after binary operator
+    E266,  # too many leading '#' for block comment
+    E402,  # module level import not at top of file
+
+# Maximum complexity
+max-complexity = 10
+
+# Show source code for each error
+show-source = True
+
+# Show the relevant text for each error
+show-pep8 = True
+
+# Count the number of occurrences of each error/warning code
+count = True
+
+# Print total number of errors
+statistics = True
