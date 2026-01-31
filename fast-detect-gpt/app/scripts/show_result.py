@@ -48,4 +48,3 @@ if __name__ == '__main__':
             fig_file = f"{res_file}.pdf"
             save_histogram(res['predictions'], fig_file)
             print(f"{fig_file}: histogram figure saved.")
-

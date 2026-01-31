@@ -12,38 +12,38 @@ def detect():
         try:
             data = request.get_json()
             text = data.get('text', None)
-            
+
             if not text:
                 return jsonify({'error': 'No text provided'}), 400
-            
+
             print(f"Processing text: {text}")
-            
+
             # Get the path to the infer.py script
             script_dir = os.path.join(os.path.dirname(__file__), 'scripts')
             filepath = os.path.join(script_dir, 'infer.py')
-            
+
             # Use sys.executable to ensure we use the same Python interpreter
             import sys
             parameters = [sys.executable, filepath, "--text", text]
-            
+
             # Run the subprocess and capture the output (20 minute timeout for model loading with offloading)
             print(f"[main.py] Starting inference with 20-minute timeout...")
             result = subprocess.run(parameters, capture_output=True, text=True)
-            
+
             if result.returncode == 0:
                 # Split the output into lines and get the last line
                 output_lines = result.stdout.splitlines()
-                
+
                 if not output_lines:
                     return jsonify({
                         "error": "No output from inference script",
                         "stderr": result.stderr,
                         "stdout": result.stdout
                     }), 500
-                
+
                 # Extract the last element
                 last_element = output_lines[-1]
-                
+
                 # Parse the JSON string into a Python dictionary
                 try:
                     output_dict = json.loads(last_element)
@@ -61,7 +61,7 @@ def detect():
                     "Stderr": f"Error running infer.py. Error: {result.stderr}",
                     "Stdout": result.stdout
                 }), 400
-                
+
         except subprocess.TimeoutExpired:
             return jsonify({'error': 'Inference timeout - processing took too long (>60s)'}), 504
         except json.JSONDecodeError as e:
@@ -72,7 +72,7 @@ def detect():
                 'error': f'Exception: {str(e)}',
                 'traceback': traceback.format_exc()
             }), 400
-    
+
     elif request.method == 'GET':
         try:
             data_response = {

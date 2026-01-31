@@ -26,7 +26,7 @@ class ProbEstimator:
 
         # Filter out JSON files
         json_files = [os.path.join(prob_path, file) for file in prob_files if file.endswith('.json')]
-      
+
         #for result_file in glob.glob(os.path.join(args.ref_path, '*.json')):
         for result_file in json_files:
             #print("[infer.py] (ProbEstimator class) Main result file: ", glob.glob(args.ref_path))
@@ -50,7 +50,7 @@ def run(args):
     scoring_model = load_model(args.scoring_model_name, args, args.cache_dir)
     scoring_model.eval()
     scoring_tokenizer = load_tokenizer(args.scoring_model_name, args, args.cache_dir)
-    
+
     if args.reference_model_name != args.scoring_model_name:
         reference_tokenizer = load_tokenizer(args.reference_model_name, args.dataset, args.cache_dir)
         reference_model = load_model(args.reference_model_name, args.device, args.cache_dir)
@@ -124,14 +124,14 @@ if __name__ == '__main__':
     # Development: Use GPT-2 (lightweight, 500MB)
     # Production: Use GPT-J-6B (accurate detection, 24GB)
     env = os.getenv('ENVIRONMENT', 'development').lower()
-    
+
     if env == 'production':
         default_model = 'gpt-j-6B'
         print('[infer.py] Running in PRODUCTION mode with GPT-J-6B')
     else:
         default_model = 'gpt2'
         print('[infer.py] Running in DEVELOPMENT mode with GPT-2')
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--reference_model_name', type=str, default=default_model)
     parser.add_argument('--scoring_model_name', type=str, default=default_model)

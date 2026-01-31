@@ -23,4 +23,3 @@ def get_precision_recall_metrics(real_preds, sample_preds):
                                                   real_preds + sample_preds)
     pr_auc = auc(recall, precision)
     return precision.tolist(), recall.tolist(), float(pr_auc)
-

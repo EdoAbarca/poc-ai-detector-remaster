@@ -16,7 +16,7 @@ def load_dataset(path, name=None, split=None, cache_dir=None):
 
 def load_pubmed(cache_dir):
     data = load_dataset('pubmed_qa', 'pqa_labeled', split='train', cache_dir=cache_dir)
-    
+
     # combine question and long_answer
     data = [f'Question: {q} Answer:{SEPARATOR}{a}' for q, a in zip(data['question'], data['long_answer'])]
 
@@ -53,12 +53,12 @@ def process_spaces(story):
 
 def load_writing(cache_dir=None):
     writing_path = 'data/writingPrompts'
-    
+
     with open(f'{writing_path}/valid.wp_source', 'r') as f:
         prompts = f.readlines()
     with open(f'{writing_path}/valid.wp_target', 'r') as f:
         stories = f.readlines()
-    
+
     prompts = [process_prompt(prompt) for prompt in prompts]
     joined = [process_spaces(prompt + " " + story) for prompt, story in zip(prompts, stories)]
     filtered = [story for story in joined if 'nsfw' not in story and 'NSFW' not in story]

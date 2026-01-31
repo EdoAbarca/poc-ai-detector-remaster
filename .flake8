@@ -19,11 +19,11 @@ exclude =
 
 # Error codes to ignore
 ignore =
-    E203,  # whitespace before ':'
+    E203,  # whitespace before colon
     E501,  # line too long (handled by black)
     W503,  # line break before binary operator
     W504,  # line break after binary operator
-    E266,  # too many leading '#' for block comment
+    E266,  # too many leading hashes for block comment
     E402,  # module level import not at top of file
 
 # Maximum complexity

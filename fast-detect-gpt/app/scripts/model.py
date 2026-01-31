@@ -17,12 +17,12 @@ def get_base_route(model_name, cache_dir):
 
 def get_model(model_name, kwargs, cache_dir):
     local_path = get_base_route(model_name, cache_dir)
-    
+
     # Environment-based optimization
     # Development (GPT-2): Minimal resources needed
     # Production (GPT-J-6B): GPU-accelerated with offloading
     env = os.getenv('ENVIRONMENT', 'development').lower()
-    
+
     if env == 'production':
         # Production: Optimize for GPT-J-6B with GPU offloading
         max_memory = {0: "20GB", "cpu": "40GB"}  # Large model support
@@ -33,9 +33,9 @@ def get_model(model_name, kwargs, cache_dir):
         max_memory = None  # Auto-allocate for small model
         device_map = 'auto'
         print(f"[model.py] (get_model) DEVELOPMENT mode: Auto resource allocation")
-    
+
     print(f"[model.py] (get_model) Loading model {model_name}...")
-    
+
     if os.path.exists(local_path):
         print("[model.py] (get_model) Ruta local existe, posiblemente los archivos estén en caché")
         # Variable to track whether 'config.json' was found
@@ -60,70 +60,70 @@ def get_model(model_name, kwargs, cache_dir):
                     'device_map': device_map,
                     'low_cpu_mem_usage': True,
                 }
-                
+
                 # Add memory limits only for production
                 if max_memory:
                     load_kwargs['max_memory'] = max_memory
                     load_kwargs['offload_folder'] = "offload"
                     load_kwargs['offload_state_dict'] = True
-                
+
                 model = AutoModelForCausalLM.from_pretrained(model_path, **load_kwargs)
                 print("[model.py] (get_model) Modelo cargado exitosamente")
                 return model
             except (OSError, RuntimeError) as e:
                 print(f"[model.py] (get_model) Error loading cached model: {e}")
                 print("[model.py] (get_model) Falling back to downloading from Hugging Face...")
-                
+
                 load_kwargs = {
                     'cache_dir': cache_dir,
                     'torch_dtype': torch.float16,
                     'device_map': device_map,
                     'low_cpu_mem_usage': True,
                 }
-                
+
                 if max_memory:
                     load_kwargs['max_memory'] = max_memory
                     load_kwargs['offload_folder'] = "offload"
                     load_kwargs['offload_state_dict'] = True
-                
+
                 model = AutoModelForCausalLM.from_pretrained(model_name, **load_kwargs)
                 print("[model.py] (get_model) Modelo cargado exitosamente")
                 return model
         else:
             print(f"[model.py] (get_model) Model '{model_name}' no encontrado en caché")
             print("[model.py] (get_model) Cargando modelo desde Hugging Face...")
-            
+
             load_kwargs = {
                 'cache_dir': cache_dir,
                 'torch_dtype': torch.float16,
                 'device_map': device_map,
                 'low_cpu_mem_usage': True,
             }
-            
+
             if max_memory:
                 load_kwargs['max_memory'] = max_memory
                 load_kwargs['offload_folder'] = "offload"
                 load_kwargs['offload_state_dict'] = True
-            
+
             model = AutoModelForCausalLM.from_pretrained(model_name, **load_kwargs)
             print("[model.py] (get_model) Modelo cargado exitosamente")
             return model
     else:
         print("[model.py] (get_model) Ruta local no existe")
         print("[model.py] (get_model) Cargando modelo desde Hugging Face...")
-        
+
         load_kwargs = {
             'cache_dir': cache_dir,
             'torch_dtype': torch.float16,
             'device_map': device_map,
             'low_cpu_mem_usage': True,
         }
-        
+
         if max_memory:
             load_kwargs['max_memory'] = max_memory
             load_kwargs['offload_folder'] = "offload"
             load_kwargs['offload_state_dict'] = True
-        
+
         model = AutoModelForCausalLM.from_pretrained(model_name, **load_kwargs)
         print("[model.py] (get_model) Modelo cargado exitosamente")
         return model
@@ -221,4 +221,3 @@ if __name__ == '__main__':
     load_tokenizer(args.model_name, 'xsum', args.cache_dir)
     load_model(args.model_name, 'cpu', args.cache_dir)
 '''
-
