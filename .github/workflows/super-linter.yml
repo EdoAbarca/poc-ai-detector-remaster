@@ -27,8 +27,8 @@ jobs:
       - name: Cache Super Linter
         uses: actions/cache@v4
         with:
-          path: ~/.cache/super-linter
-          key: ${{ runner.os }}-super-linter-${{ github.sha }}
+          path: /tmp/lint
+          key: ${{ runner.os }}-super-linter-${{ hashFiles('.github/workflows/super-linter.yml') }}
           restore-keys: |
             ${{ runner.os }}-super-linter-
 
