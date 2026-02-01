@@ -1,35 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-
-// Mock Prisma Client
-jest.mock('@prisma/client', () => {
-  const mockPrismaClient = {
-    user: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-    },
-  };
-  return {
-    PrismaClient: jest.fn(() => mockPrismaClient),
-  };
-});
 
 // Mock bcrypt
 jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let mockPrisma: any;
+  let prismaService: PrismaService;
+
+  const mockPrismaService = {
+    user: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+    },
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService],
+      providers: [
+        AuthService,
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    mockPrisma = (service as any).prisma;
+    prismaService = module.get<PrismaService>(PrismaService);
 
     // Reset all mocks
     jest.clearAllMocks();
@@ -44,7 +45,7 @@ describe('AuthService', () => {
 
     it('should successfully create a new user', async () => {
       // Mock that no user exists
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       // Mock password hashing
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword123');
@@ -56,19 +57,19 @@ describe('AuthService', () => {
         username: createUserDto.username,
         createdAt: new Date(),
       };
-      mockPrisma.user.create.mockResolvedValue(createdUser);
+      mockPrismaService.user.create.mockResolvedValue(createdUser);
 
       const result = await service.signup(createUserDto);
 
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(2);
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledTimes(2);
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: createUserDto.email },
       });
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
         where: { username: createUserDto.username },
       });
       expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 10);
-      expect(mockPrisma.user.create).toHaveBeenCalledWith({
+      expect(mockPrismaService.user.create).toHaveBeenCalledWith({
         data: {
           email: createUserDto.email,
           username: createUserDto.username,
@@ -89,7 +90,7 @@ describe('AuthService', () => {
 
     it('should throw ConflictException when email already exists', async () => {
       // Mock that user with email exists
-      mockPrisma.user.findUnique.mockResolvedValueOnce({
+      mockPrismaService.user.findUnique.mockResolvedValueOnce({
         id: 1,
         email: createUserDto.email,
       });
@@ -101,7 +102,7 @@ describe('AuthService', () => {
 
     it('should throw ConflictException when username already exists', async () => {
       // Mock that email doesn't exist but username does
-      mockPrisma.user.findUnique
+      mockPrismaService.user.findUnique
         .mockResolvedValueOnce(null) // email check
         .mockResolvedValueOnce({
           // username check
@@ -116,13 +117,13 @@ describe('AuthService', () => {
 
     it('should throw InternalServerErrorException when user creation fails', async () => {
       // Mock that no user exists
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       // Mock password hashing
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword123');
 
       // Mock user creation failure
-      mockPrisma.user.create.mockRejectedValue(new Error('Database error'));
+      mockPrismaService.user.create.mockRejectedValue(new Error('Database error'));
 
       await expect(service.signup(createUserDto)).rejects.toThrow(
         InternalServerErrorException,

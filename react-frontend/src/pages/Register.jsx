@@ -62,7 +62,8 @@ function Register() {
       setIsLoading(true);
 
       // Make API request
-      const response = await fetch('http://localhost:3333/auth/signup', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+      const response = await fetch(`${apiUrl}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
