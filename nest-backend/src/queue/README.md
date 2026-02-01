@@ -110,6 +110,7 @@ Returns queue statistics for the detection queue.
 Access the queue monitoring dashboard at: **http://localhost:3333/queues**
 
 The dashboard provides:
+
 - Real-time view of all queues
 - Job status and progress
 - Failed job details

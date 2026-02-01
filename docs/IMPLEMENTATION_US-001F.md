@@ -3,6 +3,7 @@
 ## ✅ Completed Tasks
 
 ### 1. Redis Container Configuration
+
 - ✅ Redis service already configured in `docker-compose.yml`
 - ✅ Redis service already configured in `docker-compose.prod.yml`
 - ✅ Updated backend service to depend on Redis
@@ -36,12 +37,14 @@ nest-backend/src/queue/
 ### 4. Queues Implemented
 
 #### Upload Queue (`upload-queue`)
+
 - Tracks file upload progress (0-100%)
 - Simulates file upload processing
 - Automatic progress updates
 - Error handling and logging
 
 #### Detection Queue (`detection-queue`)
+
 - Tracks AI detection progress through stages:
   - Preprocessing (20%)
   - Model loading (40%)
@@ -52,6 +55,7 @@ nest-backend/src/queue/
 - Ready for Fast-Detect-GPT integration
 
 ### 5. Bull Board Dashboard
+
 - Accessible at: `http://localhost:3333/queues`
 - Real-time queue monitoring
 - Job inspection and retry capabilities
@@ -124,6 +128,7 @@ BullModule.forRoot({
 ## 🧪 Testing
 
 Unit tests created for QueueService:
+
 - Job creation tests
 - Progress tracking tests
 - Queue statistics tests
@@ -138,16 +143,19 @@ npm test -- queue.service.spec
 ## 📊 Features
 
 ### Progress Tracking
+
 - Real-time job progress updates
 - Status tracking (waiting, active, completed, failed)
 - Custom messages per stage
 
 ### Error Handling
+
 - Failed jobs retained for inspection
 - Comprehensive logging
 - Error stack traces
 
 ### Monitoring
+
 - Bull Board web dashboard
 - Queue statistics API
 - Job inspection and retry
