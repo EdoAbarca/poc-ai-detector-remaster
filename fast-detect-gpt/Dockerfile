@@ -1,6 +1,6 @@
 # Multi-stage build for optimized Flask API with GPU support
 # Base stage with CUDA and Python
-FROM nvidia/cuda:12.1.0-runtime-ubuntu20.04 AS base
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 AS base
 
 # Environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
