@@ -24,6 +24,14 @@ jobs:
           # Full git history is needed to get a proper list of changed files within super-linter
           fetch-depth: 0
 
+      - name: Cache Super Linter
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/super-linter
+          key: ${{ runner.os }}-super-linter-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-super-linter-
+
       - name: Run Super Linter
         uses: github/super-linter@v6
         env:
