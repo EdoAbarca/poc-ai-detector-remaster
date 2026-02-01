@@ -1,11 +1,11 @@
 import { Injectable, ConflictException, InternalServerErrorException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
-  private prisma = new PrismaClient();
+  constructor(private readonly prisma: PrismaService) {}
 
   async signup(createUserDto: CreateUserDto) {
     const { email, username, password } = createUserDto;
