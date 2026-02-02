@@ -18,4 +18,10 @@ export class AuthController {
   async signin(@Body(new ValidationPipe({ whitelist: true })) signInDto: SignInDto) {
     return this.authService.signin(signInDto);
   }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout() {
+    return this.authService.logout();
+  }
 }

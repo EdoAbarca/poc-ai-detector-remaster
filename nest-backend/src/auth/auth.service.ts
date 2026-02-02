@@ -100,4 +100,13 @@ export class AuthService {
       },
     };
   }
+
+  async logout() {
+    // Note: Token invalidation happens on the client side
+    // In a production environment, you would implement token blacklisting here
+    // by storing revoked tokens in Redis or a database
+    return {
+      message: 'Logout successful',
+    };
+  }
 }
