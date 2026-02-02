@@ -4,27 +4,27 @@ import { Icon } from '@iconify/react';
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user] = useState(() => {
+    // Initialize user state from localStorage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (err) {
+        console.error('Failed to parse user data:', err);
+        return null;
+      }
+    }
+    return null;
+  });
 
   useEffect(() => {
     // Check if user is logged in
     const accessToken = localStorage.getItem('accessToken');
-    const userStr = localStorage.getItem('user');
 
     if (!accessToken) {
       // Redirect to login if not authenticated
       navigate('/login');
-      return;
-    }
-
-    if (userStr) {
-      try {
-        const parsedUser = JSON.parse(userStr);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setUser(parsedUser);
-      } catch (err) {
-        console.error('Failed to parse user data:', err);
-      }
     }
   }, [navigate]);
 

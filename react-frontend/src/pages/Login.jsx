@@ -26,7 +26,6 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -235,8 +234,6 @@ function Login() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-[#2563EB] bg-white border-slate-300 rounded focus:ring-[#2563EB] focus:ring-2"
                 />
                 <span className="text-sm text-[#64748B]">Remember Me</span>
