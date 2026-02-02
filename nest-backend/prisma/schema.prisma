@@ -14,4 +14,24 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  scans     Scan[]
+}
+
+model Scan {
+  id          Int       @id @default(autoincrement())
+  title       String
+  content     String?   @db.Text
+  aiProviders String[]
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags        Tag[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  scans     Scan[]
+  createdAt DateTime @default(now())
 }
