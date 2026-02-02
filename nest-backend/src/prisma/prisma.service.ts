@@ -36,4 +36,12 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get user() {
     return this.prisma.user;
   }
+
+  get scan() {
+    return this.prisma.scan;
+  }
+
+  get tag() {
+    return this.prisma.tag;
+  }
 }
