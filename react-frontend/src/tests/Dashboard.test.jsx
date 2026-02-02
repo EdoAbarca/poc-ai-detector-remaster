@@ -76,21 +76,6 @@ describe('Dashboard Component - US-004', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Scan Management')).toBeInTheDocument();
-      expect(screen.getByText('Metrics Overview')).toBeInTheDocument();
-    });
-  });
-
-  it('should display metrics overview section', async () => {
-    useAuthStore.getState().setAuth(mockUser, {
-      accessToken: 'test-token',
-      refreshToken: 'test-refresh-token',
-    });
-
-    renderDashboard();
-
-    await waitFor(() => {
-      expect(screen.getByText('Total Scans (30 Days)')).toBeInTheDocument();
-      expect(screen.getByText('AI vs Human Distribution')).toBeInTheDocument();
     });
   });
 
@@ -209,25 +194,6 @@ describe('Dashboard Component - US-004', () => {
     // Scan should be removed from the list
     await waitFor(() => {
       expect(screen.queryByText('Q3 Marketing Blog Post')).not.toBeInTheDocument();
-    });
-  });
-
-  it('should display correct metrics', async () => {
-    useAuthStore.getState().setAuth(mockUser, {
-      accessToken: 'test-token',
-      refreshToken: 'test-refresh-token',
-    });
-
-    renderDashboard();
-
-    await waitFor(() => {
-      // Total scans
-      const totalScansElements = screen.getAllByText('4');
-      expect(totalScansElements.length).toBeGreaterThan(0);
-      
-      // AI vs Human distribution
-      expect(screen.getByText(/AI Generated/i)).toBeInTheDocument();
-      expect(screen.getByText(/Human Written/i)).toBeInTheDocument();
     });
   });
 

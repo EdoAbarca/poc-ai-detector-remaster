@@ -131,12 +131,6 @@ function Dashboard() {
     scan.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalScans = scans.length;
-  const aiGeneratedCount = scans.filter(s => s.aiProviders.length > 0).length;
-  const humanWrittenCount = totalScans - aiGeneratedCount;
-  const aiPercentage = totalScans > 0 ? Math.round((aiGeneratedCount / totalScans) * 100) : 0;
-  const humanPercentage = 100 - aiPercentage;
-
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -180,67 +174,6 @@ function Dashboard() {
       {/* Main Content */}
       <main className="px-6 lg:px-20 py-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          {/* Metrics Overview */}
-          <section>
-            <h2 className="text-gray-900 text-3xl font-bold mb-6">Metrics Overview</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Total Scans Card */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium">Total Scans (30 Days)</p>
-                    <p className="text-gray-900 text-4xl font-bold mt-1">{totalScans}</p>
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-600">
-                    <Icon icon="mdi:trending-up" className="text-sm" />
-                    +12.5%
-                  </span>
-                </div>
-                <div className="mt-6 h-24 bg-gradient-to-b from-[#6324eb]/20 to-transparent rounded-lg"></div>
-              </div>
-
-              {/* AI vs Human Distribution */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium">AI vs Human Distribution</p>
-                    <p className="text-gray-900 text-2xl font-bold mt-1">Total Detections</p>
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                    <Icon icon="mdi:chart-pie" className="text-sm" />
-                    Overview
-                  </span>
-                </div>
-                <div className="space-y-4 mt-6">
-                  <div>
-                    <div className="flex justify-between items-end mb-2">
-                      <span className="text-sm font-bold text-gray-700">AI Generated</span>
-                      <span className="text-lg font-bold text-[#6324eb]">{aiGeneratedCount} ({aiPercentage}%)</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-[#6324eb] to-purple-400 h-3 rounded-full" 
-                        style={{ width: `${aiPercentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-end mb-2">
-                      <span className="text-sm font-bold text-gray-700">Human Written</span>
-                      <span className="text-lg font-bold text-teal-600">{humanWrittenCount} ({humanPercentage}%)</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-teal-500 to-emerald-400 h-3 rounded-full" 
-                        style={{ width: `${humanPercentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* Scan Management */}
           <section>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-gray-200 pb-4 mb-6">
@@ -282,7 +215,7 @@ function Dashboard() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="block w-full md:w-auto h-10 pl-3 pr-8 py-2 text-base border-gray-200 focus:outline-none focus:ring-[#6324eb] focus:border-[#6324eb] text-sm rounded-lg bg-gray-50 text-gray-700"
+                  className="block w-full md:w-auto h-10 pl-3 pr-8 py-2 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#6324eb] focus:border-[#6324eb] text-sm rounded-lg bg-gray-50 hover:bg-white text-gray-700 transition duration-150 ease-in-out cursor-pointer"
                 >
                   <option>Date</option>
                   <option>Document Count</option>
