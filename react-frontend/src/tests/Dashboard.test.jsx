@@ -37,15 +37,12 @@ describe('Dashboard Component - US-004', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
     
     // Clear Zustand store
     useAuthStore.getState().clearAuth();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    
     // Clean up Zustand store
     useAuthStore.getState().clearAuth();
     
@@ -76,7 +73,6 @@ describe('Dashboard Component - US-004', () => {
     renderDashboard();
 
     // Advance timers to load scans
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       expect(screen.getByText('Scan Management')).toBeInTheDocument();
@@ -91,7 +87,6 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       expect(screen.getByText('Total Scans (30 Days)')).toBeInTheDocument();
@@ -119,7 +114,6 @@ describe('Dashboard Component - US-004', () => {
     renderDashboard();
 
     // Wait for loading to complete
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       expect(screen.queryByText('Loading scans...')).not.toBeInTheDocument();
@@ -135,15 +129,14 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       // Check scan title and document count
       expect(screen.getByText('Q3 Marketing Blog Post')).toBeInTheDocument();
       expect(screen.getByText('1 Document')).toBeInTheDocument();
       
-      // Check tags
-      expect(screen.getByText('Verified Human')).toBeInTheDocument();
+      // Check tags - use getAllByText since there are multiple
+      expect(screen.getAllByText('Verified Human').length).toBeGreaterThan(0);
       expect(screen.getByText('Marketing')).toBeInTheDocument();
       
       // Check another scan with AI providers
@@ -159,7 +152,6 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       expect(screen.getByText('Q3 Marketing Blog Post')).toBeInTheDocument();
@@ -180,7 +172,6 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       expect(screen.getByText('Q3 Marketing Blog Post')).toBeInTheDocument();
@@ -200,7 +191,6 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       expect(screen.getByText('Q3 Marketing Blog Post')).toBeInTheDocument();
@@ -229,7 +219,6 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       // Total scans
@@ -249,7 +238,6 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       expect(screen.getByText('Manage Tags')).toBeInTheDocument();
@@ -265,14 +253,13 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       expect(screen.getByText(mockUser.username)).toBeInTheDocument();
     });
   });
 
-  it('should handle logout', () => {
+  it('should handle logout', async () => {
     useAuthStore.getState().setAuth(mockUser, {
       accessToken: 'test-token',
       refreshToken: 'test-refresh-token',
@@ -283,18 +270,20 @@ describe('Dashboard Component - US-004', () => {
     const logoutButton = screen.getByRole('button', { name: /logout/i });
     fireEvent.click(logoutButton);
 
-    // Should clear auth state
-    const state = useAuthStore.getState();
-    expect(state.accessToken).toBeNull();
-    expect(state.refreshToken).toBeNull();
-    expect(state.user).toBeNull();
+    // Wait for async logout to complete
+    await waitFor(() => {
+      // Should clear auth state
+      const state = useAuthStore.getState();
+      expect(state.accessToken).toBeNull();
+      expect(state.refreshToken).toBeNull();
+      expect(state.user).toBeNull();
 
-    // Should show toast
-    expect(mockShowToast).toHaveBeenCalled();
+      // Should show toast
+      expect(mockShowToast).toHaveBeenCalled();
 
-    // Should redirect
-    vi.advanceTimersByTime(500);
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+      // Should redirect
+      expect(mockNavigate).toHaveBeenCalledWith('/');
+    });
   });
 
   it('should render table headers correctly', async () => {
@@ -304,15 +293,18 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
+    // Wait for scans to load first
     await waitFor(() => {
-      expect(screen.getByText('SCAN TITLE')).toBeInTheDocument();
-      expect(screen.getByText('DATE')).toBeInTheDocument();
-      expect(screen.getByText('TAGS')).toBeInTheDocument();
-      expect(screen.getByText('AI PROVIDERS')).toBeInTheDocument();
-      expect(screen.getByText('ACTIONS')).toBeInTheDocument();
+      expect(screen.queryByText('Loading scans...')).not.toBeInTheDocument();
     });
+
+    // Check for table headers using role queries to be more specific
+    expect(screen.getByRole('columnheader', { name: /scan title/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /date/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /tags/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /ai providers/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /actions/i })).toBeInTheDocument();
   });
 
   it('should show responsive design elements', async () => {
@@ -322,7 +314,6 @@ describe('Dashboard Component - US-004', () => {
     });
 
     renderDashboard();
-    vi.advanceTimersByTime(600);
 
     await waitFor(() => {
       // Check for sort dropdown
