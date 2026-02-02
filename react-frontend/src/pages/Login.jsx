@@ -229,23 +229,6 @@ function Login() {
               )}
             </label>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 text-[#2563EB] bg-white border-slate-300 rounded focus:ring-[#2563EB] focus:ring-2"
-                />
-                <span className="text-sm text-[#64748B]">Remember Me</span>
-              </label>
-              <Link
-                to="/forgot-password"
-                className="text-sm font-semibold text-[#2563EB] hover:text-blue-700 hover:underline"
-              >
-                Forgot Password?
-              </Link>
-            </div>
-
             {/* General Error */}
             {errors.general && (
               <div className="rounded-lg bg-red-50 border border-red-200 p-4">
