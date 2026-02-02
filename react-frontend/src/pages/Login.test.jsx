@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Login from './Login';
+import useAuthStore from '../store/authStore';
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -20,37 +21,26 @@ vi.mock('toastify-js', () => ({
   })),
 }));
 
+// Mock @iconify/react to avoid async timer issues
+vi.mock('@iconify/react', () => ({
+  Icon: ({ icon }) => <span data-testid="icon" data-icon={icon}></span>,
+}));
+
 // Mock fetch globally
 global.fetch = vi.fn();
-
-// Mock localStorage
-const localStorageMock = (() => {
-  let store = {};
-  return {
-    getItem: (key) => store[key] || null,
-    setItem: (key, value) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-global.localStorage = localStorageMock;
 
 describe('Login Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
-    // Ensure localStorage is truly empty
-    Object.keys(localStorage).forEach(key => localStorage.removeItem(key));
+    // Clear Zustand store
+    useAuthStore.getState().clearAuth();
   });
 
   afterEach(() => {
-    localStorage.clear();
+    // Clean up Zustand store
+    useAuthStore.getState().clearAuth();
+    // Ensure all components are unmounted
+    cleanup();
   });
 
   const renderLogin = () => {
@@ -157,10 +147,10 @@ describe('Login Component', () => {
   });
 
   it('should handle login error response', async () => {
-    // Ensure localStorage is completely clear
-    localStorage.clear();
+    // Ensure store is completely clear
+    useAuthStore.getState().clearAuth();
     // Extra verification
-    expect(localStorage.getItem('accessToken')).toBeNull();
+    expect(useAuthStore.getState().accessToken).toBeNull();
     
     // Mock error API response
     global.fetch.mockResolvedValueOnce({
@@ -189,15 +179,16 @@ describe('Login Component', () => {
     await waitFor(() => {}, { timeout: 100 });
 
     // Verify no tokens are stored
-    expect(localStorage.getItem('accessToken')).toBeNull();
-    expect(localStorage.getItem('refreshToken')).toBeNull();
+    const state = useAuthStore.getState();
+    expect(state.accessToken).toBeNull();
+    expect(state.refreshToken).toBeNull();
   });
 
   it('should handle network errors gracefully', async () => {
-    // Ensure localStorage is completely clear
-    localStorage.clear();
+    // Ensure store is completely clear
+    useAuthStore.getState().clearAuth();
     // Extra verification
-    expect(localStorage.getItem('accessToken')).toBeNull();
+    expect(useAuthStore.getState().accessToken).toBeNull();
     
     // Mock network error
     global.fetch.mockRejectedValueOnce(new Error('Network error'));
@@ -221,12 +212,12 @@ describe('Login Component', () => {
     await waitFor(() => {}, { timeout: 100 });
 
     // Verify no tokens are stored on error
-    expect(localStorage.getItem('accessToken')).toBeNull();
+    expect(useAuthStore.getState().accessToken).toBeNull();
   });
 
   it('should successfully submit valid form and store tokens', async () => {
     // Ensure clean state
-    localStorage.clear();
+    useAuthStore.getState().clearAuth();
     
     // Mock successful API response
     global.fetch.mockResolvedValueOnce({
@@ -271,24 +262,25 @@ describe('Login Component', () => {
       );
     });
 
-    // Verify tokens and user are stored in localStorage
+    // Verify tokens and user are stored in Zustand store
     await waitFor(() => {
-      expect(localStorage.getItem('accessToken')).toBe('test-access-token');
-      expect(localStorage.getItem('refreshToken')).toBe('test-refresh-token');
-      expect(localStorage.getItem('user')).toBe(JSON.stringify({
+      const state = useAuthStore.getState();
+      expect(state.accessToken).toBe('test-access-token');
+      expect(state.refreshToken).toBe('test-refresh-token');
+      expect(state.user).toEqual({
         id: 1,
         email: 'test@example.com',
         username: 'testuser',
-      }));
+      });
     });
     
     // Clean up for next test
-    localStorage.clear();
+    useAuthStore.getState().clearAuth();
   });
 
   it('should disable submit button while loading', async () => {
     // Ensure clean state
-    localStorage.clear();
+    useAuthStore.getState().clearAuth();
     
     // Mock delayed API response
     global.fetch.mockImplementation(
@@ -326,6 +318,6 @@ describe('Login Component', () => {
     
     // Wait for async operations to complete and clean up
     await waitFor(() => {}, { timeout: 200 });
-    localStorage.clear();
+    useAuthStore.getState().clearAuth();
   });
 });

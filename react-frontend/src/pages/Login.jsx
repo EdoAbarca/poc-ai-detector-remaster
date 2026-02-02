@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import * as yup from 'yup';
 import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
+import useAuthStore from '../store/authStore';
 
 // Validation schema
 const loginSchema = yup.object().shape({
@@ -19,6 +20,7 @@ const loginSchema = yup.object().shape({
 
 function Login() {
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -82,13 +84,7 @@ function Login() {
 
       // Success - store tokens
       if (data.tokens) {
-        localStorage.setItem('accessToken', data.tokens.accessToken);
-        localStorage.setItem('refreshToken', data.tokens.refreshToken);
-        
-        // Store user info
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
+        setAuth(data.user, data.tokens);
       }
 
       Toastify({
