@@ -39,10 +39,10 @@ describe('Register Component', () => {
   it('should render registration form', () => {
     renderRegister();
     
-    expect(screen.getByText('Create your account')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Email address')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Username')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Password/i)).toBeInTheDocument();
+    expect(screen.getByText('Create Account')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('name@company.com')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('johndoe')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Minimum 8 characters/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument();
   });
 
@@ -59,22 +59,22 @@ describe('Register Component', () => {
     });
   });
 
-  it.skip('should show validation error for invalid email', async () => {
-    // Note: This test is skipped because browser's HTML5 validation
-    // prevents form submission with invalid email format.
-    // The validation is working, but it's handled by the browser
-    // before our Yup validation runs.
+  it('should show validation error for invalid email', async () => {
     renderRegister();
     
-    const emailInput = screen.getByPlaceholderText('Email address');
-    const usernameInput = screen.getByPlaceholderText('Username');
-    const passwordInput = screen.getByPlaceholderText(/Password/i);
-    const submitButton = screen.getByRole('button', { name: /sign up/i });
+    const form = screen.getByRole('button', { name: /sign up/i }).closest('form');
+    const emailInput = screen.getByPlaceholderText('name@company.com');
+    const usernameInput = screen.getByPlaceholderText('johndoe');
+    const passwordInput = screen.getByPlaceholderText(/Minimum 8 characters/i);
+    
+    // Remove HTML5 validation to test Yup validation
+    form.setAttribute('noValidate', 'true');
     
     fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
     fireEvent.change(usernameInput, { target: { value: 'testuser' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
+    
+    fireEvent.submit(form);
     
     await waitFor(() => {
       expect(screen.getByText('Please provide a valid email address')).toBeInTheDocument();
@@ -84,9 +84,9 @@ describe('Register Component', () => {
   it('should show validation error for short username', async () => {
     renderRegister();
     
-    const emailInput = screen.getByPlaceholderText('Email address');
-    const usernameInput = screen.getByPlaceholderText('Username');
-    const passwordInput = screen.getByPlaceholderText(/Password/i);
+    const emailInput = screen.getByPlaceholderText('name@company.com');
+    const usernameInput = screen.getByPlaceholderText('johndoe');
+    const passwordInput = screen.getByPlaceholderText(/Minimum 8 characters/i);
     const submitButton = screen.getByRole('button', { name: /sign up/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -102,9 +102,9 @@ describe('Register Component', () => {
   it('should show validation error for invalid username characters', async () => {
     renderRegister();
     
-    const emailInput = screen.getByPlaceholderText('Email address');
-    const usernameInput = screen.getByPlaceholderText('Username');
-    const passwordInput = screen.getByPlaceholderText(/Password/i);
+    const emailInput = screen.getByPlaceholderText('name@company.com');
+    const usernameInput = screen.getByPlaceholderText('johndoe');
+    const passwordInput = screen.getByPlaceholderText(/Minimum 8 characters/i);
     const submitButton = screen.getByRole('button', { name: /sign up/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -120,9 +120,9 @@ describe('Register Component', () => {
   it('should show validation error for short password', async () => {
     renderRegister();
     
-    const emailInput = screen.getByPlaceholderText('Email address');
-    const usernameInput = screen.getByPlaceholderText('Username');
-    const passwordInput = screen.getByPlaceholderText(/Password/i);
+    const emailInput = screen.getByPlaceholderText('name@company.com');
+    const usernameInput = screen.getByPlaceholderText('johndoe');
+    const passwordInput = screen.getByPlaceholderText(/Minimum 8 characters/i);
     const submitButton = screen.getByRole('button', { name: /sign up/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -138,7 +138,7 @@ describe('Register Component', () => {
   it('should clear field error when user starts typing', async () => {
     renderRegister();
     
-    const emailInput = screen.getByPlaceholderText('Email address');
+    const emailInput = screen.getByPlaceholderText('name@company.com');
     const submitButton = screen.getByRole('button', { name: /sign up/i });
     
     // Trigger validation error
@@ -168,9 +168,9 @@ describe('Register Component', () => {
 
     renderRegister();
     
-    const emailInput = screen.getByPlaceholderText('Email address');
-    const usernameInput = screen.getByPlaceholderText('Username');
-    const passwordInput = screen.getByPlaceholderText(/Password/i);
+    const emailInput = screen.getByPlaceholderText('name@company.com');
+    const usernameInput = screen.getByPlaceholderText('johndoe');
+    const passwordInput = screen.getByPlaceholderText(/Minimum 8 characters/i);
     const submitButton = screen.getByRole('button', { name: /sign up/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -212,9 +212,9 @@ describe('Register Component', () => {
 
     renderRegister();
     
-    const emailInput = screen.getByPlaceholderText('Email address');
-    const usernameInput = screen.getByPlaceholderText('Username');
-    const passwordInput = screen.getByPlaceholderText(/Password/i);
+    const emailInput = screen.getByPlaceholderText('name@company.com');
+    const usernameInput = screen.getByPlaceholderText('johndoe');
+    const passwordInput = screen.getByPlaceholderText(/Minimum 8 characters/i);
     const submitButton = screen.getByRole('button', { name: /sign up/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });

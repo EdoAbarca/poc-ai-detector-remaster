@@ -35,3 +35,6 @@ coverage/
 .cache/
 tmp/
 temp/
+
+# Stitch wireframe files (not for commit)
+stitch_ai_detection_dashboard_overview/

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import * as yup from 'yup';
 import Toastify from 'toastify-js';
@@ -35,6 +35,7 @@ function Register() {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -148,147 +149,159 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Join the AI detection platform
+    <div className="flex min-h-screen w-full flex-row overflow-hidden bg-white">
+      {/* Left Panel: Brand & Visuals (40%) - Hidden on mobile */}
+      <div className="hidden lg:flex w-[40%] flex-col relative bg-[#1E40AF] text-white p-12 justify-between">
+        {/* Background with gradient overlay */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 opacity-90"></div>
+        
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-8">
+            <Icon icon="mdi:shield-check" className="text-4xl" />
+            <span className="text-2xl font-bold tracking-tight">PoC AI Detector</span>
+          </div>
+        </div>
+        
+        <div className="relative z-10 mb-12">
+          <h1 className="text-5xl font-bold leading-tight tracking-tight mb-6">
+            Detect with Confidence.
+          </h1>
+          <p className="text-lg font-light text-blue-100 max-w-md leading-relaxed">
+            Join thousands of users in verifying content authenticity. Ensure originality and trust in every word you publish.
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm space-y-4">
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icon
-                    icon="mdi:email"
-                    className="h-5 w-5 text-gray-400"
-                  />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
-                  } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                  placeholder="Email address"
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
+        
+        <div className="relative z-10 flex gap-4 text-sm font-medium text-blue-200">
+          <span>© 2026 PoC AI Detector</span>
+        </div>
+      </div>
 
+      {/* Right Panel: Registration Form (60%) */}
+      <div className="flex flex-1 w-full lg:w-[60%] flex-col justify-center items-center bg-white overflow-y-auto">
+        <div className="w-full max-w-[520px] px-6 py-12 lg:px-12">
+          {/* Mobile Logo (Visible only on small screens) */}
+          <div className="lg:hidden flex items-center gap-2 mb-8 text-[#2463eb]">
+            <Icon icon="mdi:shield-check" className="text-3xl" />
+            <span className="text-xl font-bold">PoC AI Detector</span>
+          </div>
+          
+          {/* Header */}
+          <div className="mb-10">
+            <h2 className="text-[#0F172A] text-4xl font-black leading-tight tracking-tight mb-2">
+              Create Account
+            </h2>
+            <p className="text-[#64748B] text-base font-normal">
+              Start verifying your content today.
+            </p>
+          </div>
+          
+          {/* Form */}
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             {/* Username Field */}
-            <div>
-              <label htmlFor="username" className="sr-only">
-                Username
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icon
-                    icon="mdi:account"
-                    className="h-5 w-5 text-gray-400"
-                  />
-                </div>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  className={`appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border ${
-                    errors.username ? 'border-red-500' : 'border-gray-300'
-                  } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                  placeholder="Username"
-                />
-              </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[#0F172A] text-sm font-semibold">Username</span>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                value={formData.username}
+                onChange={handleChange}
+                className={`w-full rounded-lg border ${
+                  errors.username ? 'border-red-500' : 'border-slate-200'
+                } bg-white px-4 py-3 text-[#0F172A] placeholder:text-slate-400 focus:border-[#2563EB] focus:ring-0 text-base transition-colors`}
+                placeholder="johndoe"
+              />
               {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+                <p className="text-sm text-red-600">{errors.username}</p>
               )}
-            </div>
+            </label>
+
+            {/* Email Address Field */}
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[#0F172A] text-sm font-semibold">Email Address</span>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={`w-full rounded-lg border ${
+                  errors.email ? 'border-red-500' : 'border-slate-200'
+                } bg-white px-4 py-3 text-[#0F172A] placeholder:text-slate-400 focus:border-[#2563EB] focus:ring-0 text-base transition-colors`}
+                placeholder="name@company.com"
+              />
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email}</p>
+              )}
+            </label>
 
             {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icon
-                    icon="mdi:lock"
-                    className="h-5 w-5 text-gray-400"
-                  />
-                </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[#0F172A] text-sm font-semibold">Password</span>
+              <div className="relative flex items-center">
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                  placeholder="Password (min. 8 characters)"
+                  className={`w-full rounded-lg border ${
+                    errors.password ? 'border-red-500' : 'border-slate-200'
+                  } bg-white px-4 py-3 pr-12 text-[#0F172A] placeholder:text-slate-400 focus:border-[#2563EB] focus:ring-0 text-base transition-colors`}
+                  placeholder="Minimum 8 characters"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 text-slate-400 hover:text-slate-600 flex items-center justify-center"
+                >
+                  <Icon icon={showPassword ? 'mdi:eye-off' : 'mdi:eye'} className="text-xl" />
+                </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                <p className="text-sm text-red-600">{errors.password}</p>
               )}
-            </div>
-          </div>
+            </label>
 
-          {errors.general && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{errors.general}</p>
-            </div>
-          )}
+            {/* General Error */}
+            {errors.general && (
+              <div className="rounded-lg bg-red-50 border border-red-200 p-4">
+                <p className="text-sm text-red-800">{errors.general}</p>
+              </div>
+            )}
 
-          <div>
+            {/* Sign Up Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 flex w-full items-center justify-center rounded-lg bg-[#2563EB] px-6 py-3.5 text-base font-bold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center">
-                  <Icon
-                    icon="mdi:loading"
-                    className="animate-spin h-5 w-5 mr-2"
-                  />
+                  <Icon icon="mdi:loading" className="animate-spin h-5 w-5 mr-2" />
                   Creating account...
                 </span>
               ) : (
-                'Sign up'
+                'Sign Up'
               )}
             </button>
-          </div>
+          </form>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <a
-                href="/login"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Sign in
-              </a>
-            </p>
-          </div>
-        </form>
+          {/* Footer Link */}
+          <p className="mt-8 text-center text-sm text-slate-600">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="font-bold text-[#2563EB] hover:text-blue-700 hover:underline"
+            >
+              Log in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
