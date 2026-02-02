@@ -1,41 +1,43 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
+import Toastify from 'toastify-js';
+import 'toastify-js/src/toastify.css';
+import useAuthStore from '../store/authStore';
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [user] = useState(() => {
-    // Initialize user state from localStorage
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        return JSON.parse(userStr);
-      } catch (err) {
-        console.error('Failed to parse user data:', err);
-        return null;
-      }
-    }
-    return null;
-  });
+  const user = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useEffect(() => {
     // Check if user is logged in
-    const accessToken = localStorage.getItem('accessToken');
-
     if (!accessToken) {
       // Redirect to login if not authenticated
       navigate('/login');
     }
-  }, [navigate]);
+  }, [accessToken, navigate]);
 
   const handleLogout = () => {
     // Clear tokens and user data
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    clearAuth();
 
-    // Redirect to login
-    navigate('/login');
+    // Show success notification
+    Toastify({
+      text: 'Logout successful! See you soon.',
+      duration: 3000,
+      gravity: 'top',
+      position: 'right',
+      style: {
+        background: 'linear-gradient(to right, #00b09b, #96c93d)',
+      },
+    }).showToast();
+
+    // Redirect to landing page
+    setTimeout(() => {
+      navigate('/');
+    }, 500);
   };
 
   if (!user) {
