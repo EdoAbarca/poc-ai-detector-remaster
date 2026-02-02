@@ -217,4 +217,14 @@ describe('AuthService', () => {
       );
     });
   });
+
+  describe('logout', () => {
+    it('should successfully logout and return success message', async () => {
+      const result = await service.logout();
+
+      expect(result).toEqual({
+        message: 'Logout successful',
+      });
+    });
+  });
 });
