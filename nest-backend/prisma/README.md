@@ -5,6 +5,7 @@ This directory contains the database seed file for populating the database with 
 ## Overview
 
 The seed script (`seed.ts`) creates:
+
 - **2 demo users** with hashed passwords
 - **5 tags** (Academic, Research, Business, Technical, Marketing)
 - **6 sample scans** with various AI providers and tag combinations
@@ -56,10 +57,12 @@ Or:
 ## Seed Data Structure
 
 ### Users
+
 - `demo_user` (demo@example.com) - Has 4 scans
 - `admin_user` (admin@example.com) - Has 2 scans
 
 ### Tags
+
 - Academic
 - Research
 - Business
@@ -67,6 +70,7 @@ Or:
 - Marketing
 
 ### Sample Scans
+
 1. Research Paper Analysis - Machine Learning Applications (Academic, Research)
 2. Business Proposal - Q4 Marketing Strategy (Business, Marketing)
 3. Technical Documentation - API Integration Guide (Technical)
@@ -102,6 +106,7 @@ npx prisma generate
 ### Connection errors
 
 Ensure:
+
 - PostgreSQL is running
 - DATABASE_URL environment variable is set correctly
 - Database exists (run migrations first)

@@ -1,4 +1,5 @@
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom'
+import { vi } from 'vitest'
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -11,6 +12,6 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+    dispatchEvent: vi.fn()
+  }))
+})
