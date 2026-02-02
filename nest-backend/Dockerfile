@@ -4,20 +4,21 @@ FROM node:20-alpine AS development
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Copy package files and pnpm config
+COPY package.json pnpm-lock.yaml .npmrc ./
 
-# Install pnpm and dependencies
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+# Install pnpm and dependencies with hoisting
+RUN npm install -g pnpm && pnpm install --frozen-lockfile --shamefully-hoist
 
-# Copy Prisma schema
+# Copy Prisma files
 COPY prisma ./prisma
-
-# Generate Prisma client
-RUN pnpm exec prisma generate
+COPY prisma.config.ts ./
 
 # Copy application code
 COPY . .
+
+# Generate Prisma client (after copying everything so it has access to all config)
+RUN pnpm exec prisma generate
 
 # Expose port
 EXPOSE 3333
