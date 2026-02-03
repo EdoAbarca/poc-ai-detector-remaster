@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import Login from './Login';
+import Login from '../pages/Login';
 import useAuthStore from '../store/authStore';
 
 // Mock useNavigate
