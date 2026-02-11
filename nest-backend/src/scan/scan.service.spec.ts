@@ -148,6 +148,7 @@ describe('ScanService', () => {
         },
         include: {
           tags: true,
+          documents: true,
         },
         orderBy: {
           createdAt: 'desc',

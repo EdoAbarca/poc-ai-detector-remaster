@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateScanDto } from './dto/create-scan.dto';
+import { CreateScanDto, CreateScanWithFilesDto } from './dto/create-scan.dto';
 
 @Injectable()
 export class ScanService {
@@ -41,6 +41,54 @@ export class ScanService {
     return scan;
   }
 
+  async createScanWithFiles(
+    userId: number,
+    createScanDto: CreateScanWithFilesDto,
+    files: Express.Multer.File[],
+  ) {
+    const { title, aiProviders, tags } = createScanDto;
+
+    // First, get or create tags
+    const tagObjects = tags
+      ? await Promise.all(
+          tags.map(async (tagName) => {
+            return this.prisma.tag.upsert({
+              where: { name: tagName },
+              update: {},
+              create: { name: tagName },
+            });
+          }),
+        )
+      : [];
+
+    // Create the scan with tags and documents
+    const scan = await this.prisma.scan.create({
+      data: {
+        title,
+        aiProviders: aiProviders || [],
+        userId,
+        tags: {
+          connect: tagObjects.map((tag) => ({ id: tag.id })),
+        },
+        documents: {
+          create: files.map((file) => ({
+            filename: file.filename,
+            originalName: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+            path: file.path,
+          })),
+        },
+      },
+      include: {
+        tags: true,
+        documents: true,
+      },
+    });
+
+    return scan;
+  }
+
   async getUserScans(userId: number) {
     const scans = await this.prisma.scan.findMany({
       where: {
@@ -48,6 +96,7 @@ export class ScanService {
       },
       include: {
         tags: true,
+        documents: true,
       },
       orderBy: {
         createdAt: 'desc',

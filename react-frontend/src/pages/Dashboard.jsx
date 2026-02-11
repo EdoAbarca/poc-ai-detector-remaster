@@ -5,6 +5,7 @@ import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
 import useAuthStore from '../store/authStore';
 import Modal from '../components/Modal';
+import CreateScanModal from '../components/CreateScanModal';
 
 // Mock scan data for US-004
 const MOCK_SCANS = [
@@ -76,6 +77,7 @@ function Dashboard() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [scanToDelete, setScanToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreateScanModalOpen, setIsCreateScanModalOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -169,6 +171,11 @@ function Dashboard() {
     setScanToDelete(null);
   };
 
+  const handleScanCreated = (newScan) => {
+    // Add the new scan to the list
+    setScans([newScan, ...scans]);
+  };
+
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
@@ -247,7 +254,10 @@ function Dashboard() {
                   <Icon icon="mdi:robot" className="text-lg" />
                   <span>Manage AIs</span>
                 </button>
-                <button className="flex items-center gap-2 h-10 px-5 bg-[#6324eb] hover:bg-[#6324eb]/90 text-white rounded-lg text-sm font-bold shadow-md shadow-[#6324eb]/20 transition-colors">
+                <button 
+                  onClick={() => setIsCreateScanModalOpen(true)}
+                  className="flex items-center gap-2 h-10 px-5 bg-[#6324eb] hover:bg-[#6324eb]/90 text-white rounded-lg text-sm font-bold shadow-md shadow-[#6324eb]/20 transition-colors"
+                >
                   <Icon icon="mdi:plus" className="text-lg" />
                   <span>Create Scan</span>
                 </button>
@@ -291,7 +301,10 @@ function Dashboard() {
                   {searchQuery ? 'Try adjusting your search query' : 'Get started by creating your first scan'}
                 </p>
                 {!searchQuery && (
-                  <button className="inline-flex items-center gap-2 px-6 py-3 bg-[#6324eb] hover:bg-[#6324eb]/90 text-white rounded-lg font-bold shadow-md shadow-[#6324eb]/20 transition-colors">
+                  <button 
+                    onClick={() => setIsCreateScanModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#6324eb] hover:bg-[#6324eb]/90 text-white rounded-lg font-bold shadow-md shadow-[#6324eb]/20 transition-colors"
+                  >
                     <Icon icon="mdi:plus" className="text-lg" />
                     Create Your First Scan
                   </button>
@@ -415,6 +428,13 @@ function Dashboard() {
         cancelText="Cancel"
         variant="danger"
         isLoading={isDeleting}
+      />
+
+      {/* Create Scan Modal - US-010 */}
+      <CreateScanModal
+        isOpen={isCreateScanModalOpen}
+        onClose={() => setIsCreateScanModalOpen(false)}
+        onScanCreated={handleScanCreated}
       />
     </div>
   );
