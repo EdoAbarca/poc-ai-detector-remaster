@@ -321,7 +321,10 @@ function Dashboard() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-3">
-                            <button className="text-gray-400 hover:text-[#6324eb] transition-colors">
+                            <button 
+                              onClick={() => navigate(`/analysis/${scan.id}`)}
+                              className="text-gray-400 hover:text-[#6324eb] transition-colors"
+                            >
                               <Icon icon="mdi:eye" className="text-xl" />
                             </button>
                             <button
