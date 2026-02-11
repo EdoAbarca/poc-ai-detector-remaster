@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConflictException } from '@nestjs/common';
 import { TagController } from './tag.controller';
 import { TagService } from './tag.service';
+import { CreateTagDto } from './dto/create-tag.dto';
 
 describe('TagController', () => {
   let controller: TagController;
@@ -9,6 +11,8 @@ describe('TagController', () => {
   const mockTagService = {
     getUserTags: jest.fn(),
     getAllTags: jest.fn(),
+    findTagByName: jest.fn(),
+    createTag: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -98,6 +102,74 @@ describe('TagController', () => {
       const result = await controller.getAllTags();
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('createTag - US-008', () => {
+    it('should create a new tag successfully', async () => {
+      const createTagDto: CreateTagDto = {
+        name: 'NewTag',
+      };
+
+      const createdTag = {
+        id: 1,
+        name: 'NewTag',
+        createdAt: new Date('2024-02-11'),
+      };
+
+      mockTagService.findTagByName.mockResolvedValue(null);
+      mockTagService.createTag.mockResolvedValue(createdTag);
+
+      const result = await controller.createTag(createTagDto);
+
+      expect(mockTagService.findTagByName).toHaveBeenCalledWith('NewTag');
+      expect(mockTagService.createTag).toHaveBeenCalledWith(createTagDto);
+      expect(result).toEqual(createdTag);
+    });
+
+    it('should throw ConflictException when tag name already exists', async () => {
+      const createTagDto: CreateTagDto = {
+        name: 'ExistingTag',
+      };
+
+      const existingTag = {
+        id: 1,
+        name: 'ExistingTag',
+        createdAt: new Date('2024-02-10'),
+      };
+
+      mockTagService.findTagByName.mockResolvedValue(existingTag);
+
+      await expect(controller.createTag(createTagDto)).rejects.toThrow(
+        ConflictException,
+      );
+      await expect(controller.createTag(createTagDto)).rejects.toThrow(
+        'Tag with this name already exists',
+      );
+
+      expect(mockTagService.findTagByName).toHaveBeenCalledWith('ExistingTag');
+      expect(mockTagService.createTag).not.toHaveBeenCalled();
+    });
+
+    it('should be case-insensitive when checking for duplicate tags', async () => {
+      const createTagDto: CreateTagDto = {
+        name: 'Finance',
+      };
+
+      const existingTag = {
+        id: 1,
+        name: 'finance',
+        createdAt: new Date('2024-02-10'),
+      };
+
+      mockTagService.findTagByName.mockResolvedValue(existingTag);
+
+      await expect(controller.createTag(createTagDto)).rejects.toThrow(
+        ConflictException,
+      );
+
+      expect(mockTagService.findTagByName).toHaveBeenCalledWith('Finance');
+      expect(mockTagService.createTag).not.toHaveBeenCalled();
     });
   });
 });
