@@ -455,4 +455,232 @@ describe('Tags Component - US-007', () => {
 
     global.fetch.mockRestore();
   });
+
+  describe('Create Tag - US-008', () => {
+    it('should open create tag modal when clicking Create New Tag button', async () => {
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+      );
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const createButton = screen.getByText('Create New Tag');
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Create New Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      global.fetch.mockRestore();
+    });
+
+    it('should close modal when clicking Cancel button', async () => {
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+      );
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const createButton = screen.getByText('Create New Tag');
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Create New Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      const cancelButton = screen.getByText('Cancel');
+      fireEvent.click(cancelButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Create New Tag', { selector: 'h2' })).not.toBeInTheDocument();
+      });
+
+      global.fetch.mockRestore();
+    });
+
+    it('should create a new tag successfully', async () => {
+      const mockExistingTags = [
+        {
+          id: 1,
+          name: 'Finance',
+          createdAt: new Date('2023-10-24').toISOString(),
+          scanCount: 14,
+        },
+      ];
+
+      const mockNewTag = {
+        id: 2,
+        name: 'NewTag',
+        createdAt: new Date('2024-02-11').toISOString(),
+      };
+
+      let callCount = 0;
+      global.fetch = vi.fn((url, options) => {
+        if (options && options.method === 'POST') {
+          callCount++;
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockNewTag),
+          });
+        }
+        // GET requests for user tags
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(callCount > 0 ? [...mockExistingTags, { ...mockNewTag, scanCount: 0 }] : mockExistingTags),
+        });
+      });
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const createButton = screen.getByText('Create New Tag');
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Create New Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      const tagNameInput = screen.getByPlaceholderText(/e.g., Confidential/i);
+      fireEvent.change(tagNameInput, { target: { value: 'NewTag' } });
+
+      const submitButton = screen.getByRole('button', { name: /Create Tag/i });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:3000/api/v1/tags',
+          expect.objectContaining({
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer test-token',
+            },
+            body: JSON.stringify({ name: 'NewTag' }),
+          })
+        );
+      });
+
+      global.fetch.mockRestore();
+    });
+
+    it('should show error when tag name already exists', async () => {
+      global.fetch = vi.fn((url, options) => {
+        if (options && options.method === 'POST') {
+          return Promise.resolve({
+            ok: false,
+            status: 409,
+            json: () => Promise.resolve({ message: 'Tag with this name already exists' }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const createButton = screen.getByText('Create New Tag');
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Create New Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      const tagNameInput = screen.getByPlaceholderText(/e.g., Confidential/i);
+      fireEvent.change(tagNameInput, { target: { value: 'Finance' } });
+
+      const submitButton = screen.getByRole('button', { name: /Create Tag/i });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockShowToast).toHaveBeenCalled();
+      });
+
+      global.fetch.mockRestore();
+    });
+
+    it('should validate tag name is required', async () => {
+      let postCalled = false;
+      global.fetch = vi.fn((url, options) => {
+        if (options && options.method === 'POST') {
+          postCalled = true;
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const createButton = screen.getByText('Create New Tag');
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Create New Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      // Try to submit with empty tag name
+      const submitButton = screen.getByRole('button', { name: /Create Tag/i });
+      fireEvent.click(submitButton);
+
+      // Wait a bit and verify no POST request was made
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      expect(postCalled).toBe(false);
+
+      global.fetch.mockRestore();
+    });
+  });
 });

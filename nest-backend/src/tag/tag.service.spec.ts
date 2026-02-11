@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TagService } from './tag.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateTagDto } from './dto/create-tag.dto';
 
 describe('TagService', () => {
   let service: TagService;
@@ -12,6 +13,8 @@ describe('TagService', () => {
     },
     tag: {
       findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
     },
   };
 
@@ -219,6 +222,84 @@ describe('TagService', () => {
           },
         })
       );
+    });
+  });
+
+  describe('findTagByName - US-008', () => {
+    it('should find a tag by name (case-insensitive)', async () => {
+      const tagName = 'Finance';
+      const mockTag = {
+        id: 1,
+        name: 'Finance',
+        createdAt: new Date('2023-10-24'),
+      };
+
+      mockPrismaService.tag.findFirst.mockResolvedValue(mockTag);
+
+      const result = await service.findTagByName(tagName);
+
+      expect(mockPrismaService.tag.findFirst).toHaveBeenCalledWith({
+        where: {
+          name: {
+            equals: tagName,
+            mode: 'insensitive',
+          },
+        },
+      });
+      expect(result).toEqual(mockTag);
+    });
+
+    it('should return null when tag is not found', async () => {
+      const tagName = 'NonExistent';
+
+      mockPrismaService.tag.findFirst.mockResolvedValue(null);
+
+      const result = await service.findTagByName(tagName);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('createTag - US-008', () => {
+    it('should create a new tag', async () => {
+      const createTagDto: CreateTagDto = {
+        name: 'NewTag',
+      };
+
+      const createdTag = {
+        id: 1,
+        name: 'NewTag',
+        createdAt: new Date('2024-02-11'),
+      };
+
+      mockPrismaService.tag.create.mockResolvedValue(createdTag);
+
+      const result = await service.createTag(createTagDto);
+
+      expect(mockPrismaService.tag.create).toHaveBeenCalledWith({
+        data: {
+          name: createTagDto.name,
+        },
+      });
+      expect(result).toEqual(createdTag);
+    });
+
+    it('should create a tag with the exact name provided', async () => {
+      const createTagDto: CreateTagDto = {
+        name: 'My Custom Tag',
+      };
+
+      const createdTag = {
+        id: 2,
+        name: 'My Custom Tag',
+        createdAt: new Date('2024-02-11'),
+      };
+
+      mockPrismaService.tag.create.mockResolvedValue(createdTag);
+
+      const result = await service.createTag(createTagDto);
+
+      expect(result.name).toBe('My Custom Tag');
     });
   });
 });

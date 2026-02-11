@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
 import useAuthStore from '../store/authStore';
+import CreateTagModal from '../components/CreateTagModal';
 
 const TAG_COLOR_MAP = {
   blue: 'bg-blue-100 text-blue-700 border-blue-200',
@@ -27,6 +28,7 @@ function Tags() {
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -66,6 +68,63 @@ function Tags() {
       }).showToast();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateTag = async (tagName) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ name: tagName }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 409) {
+          Toastify({
+            text: 'A tag with this name already exists',
+            duration: 3000,
+            gravity: 'top',
+            position: 'right',
+            style: {
+              background: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+            },
+          }).showToast();
+          throw new Error('Tag already exists');
+        }
+        throw new Error(errorData.message || 'Failed to create tag');
+      }
+
+      Toastify({
+        text: 'Tag created successfully!',
+        duration: 3000,
+        gravity: 'top',
+        position: 'right',
+        style: {
+          background: 'linear-gradient(to right, #00b09b, #96c93d)',
+        },
+      }).showToast();
+
+      // Refresh the tags list
+      await fetchTags();
+    } catch (error) {
+      console.error('Error creating tag:', error);
+      if (error.message !== 'Tag already exists') {
+        Toastify({
+          text: 'Failed to create tag. Please try again.',
+          duration: 3000,
+          gravity: 'top',
+          position: 'right',
+          style: {
+            background: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+          },
+        }).showToast();
+      }
+      throw error;
     }
   };
 
@@ -192,7 +251,10 @@ function Tags() {
             </div>
 
             {/* Actions */}
-            <button className="flex whitespace-nowrap items-center justify-center rounded-full h-11 px-6 bg-[#2563EB] hover:bg-blue-700 transition-colors text-white gap-2 text-sm font-bold shadow-sm hover:shadow-md">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex whitespace-nowrap items-center justify-center rounded-full h-11 px-6 bg-[#2563EB] hover:bg-blue-700 transition-colors text-white gap-2 text-sm font-bold shadow-sm hover:shadow-md"
+            >
               <Icon icon="mdi:plus-circle" className="text-xl" />
               <span>Create New Tag</span>
             </button>
@@ -212,7 +274,10 @@ function Tags() {
                 {searchQuery ? 'Try adjusting your search query' : 'Get started by creating your first tag'}
               </p>
               {!searchQuery && (
-                <button className="inline-flex items-center gap-2 px-6 py-3 bg-[#2563EB] hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#2563EB] hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition-colors"
+                >
                   <Icon icon="mdi:plus-circle" className="text-lg" />
                   Create Your First Tag
                 </button>
@@ -275,6 +340,13 @@ function Tags() {
           )}
         </div>
       </main>
+
+      {/* Create Tag Modal */}
+      <CreateTagModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onTagCreated={handleCreateTag}
+      />
     </div>
   );
 }
