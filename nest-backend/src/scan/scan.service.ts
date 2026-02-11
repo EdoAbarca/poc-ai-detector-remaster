@@ -57,6 +57,52 @@ export class ScanService {
     return scans;
   }
 
+  async getScanById(scanId: number, userId: number) {
+    const scan = await this.prisma.scan.findFirst({
+      where: {
+        id: scanId,
+        userId,
+      },
+      include: {
+        tags: true,
+      },
+    });
+
+    if (!scan) {
+      return null;
+    }
+
+    // Mock documents and AI detection results for now
+    // In a real implementation, these would come from related tables
+    const mockDocuments = [
+      {
+        id: 1,
+        name: `${scan.title} - Document 1`,
+        aiScore: 0.23,
+        classification: 'Human',
+        detectedBy: scan.aiProviders.length > 0 ? scan.aiProviders[0] : 'GPT-4',
+        content: scan.content || 'Sample content for analysis...',
+      },
+    ];
+
+    // If there are multiple AI providers, create results for each
+    if (scan.aiProviders.length > 1) {
+      mockDocuments.push({
+        id: 2,
+        name: `${scan.title} - Document 2`,
+        aiScore: 0.87,
+        classification: 'AI',
+        detectedBy: scan.aiProviders[1],
+        content: 'Another sample content analyzed by different AI provider...',
+      });
+    }
+
+    return {
+      ...scan,
+      documents: mockDocuments,
+    };
+  }
+
   async deleteScan(scanId: number, userId: number) {
     // Verify the scan belongs to the user
     const scan = await this.prisma.scan.findFirst({
