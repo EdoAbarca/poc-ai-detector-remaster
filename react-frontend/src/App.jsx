@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import AnalysisDetail from './pages/AnalysisDetail'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
 
@@ -22,6 +23,11 @@ function App () {
         <Route path="/logged-in" element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/analysis/:id" element={
+          <ProtectedRoute>
+            <AnalysisDetail />
           </ProtectedRoute>
         } />
         <Route path="/" element={
