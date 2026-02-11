@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateTagDto } from './dto/create-tag.dto';
 
 @Injectable()
 export class TagService {
@@ -57,5 +58,24 @@ export class TagService {
       createdAt: tag.createdAt,
       scanCount: tag._count.scans,
     }));
+  }
+
+  async findTagByName(name: string) {
+    return this.prisma.tag.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: 'insensitive',
+        },
+      },
+    });
+  }
+
+  async createTag(createTagDto: CreateTagDto) {
+    return this.prisma.tag.create({
+      data: {
+        name: createTagDto.name,
+      },
+    });
   }
 }
