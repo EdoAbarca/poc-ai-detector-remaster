@@ -5,6 +5,7 @@ import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
 import useAuthStore from '../store/authStore';
 import CreateTagModal from '../components/CreateTagModal';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
 
 const TAG_COLOR_MAP = {
   blue: 'bg-blue-100 text-blue-700 border-blue-200',
@@ -29,6 +30,9 @@ function Tags() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [tagToDelete, setTagToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -125,6 +129,66 @@ function Tags() {
         }).showToast();
       }
       throw error;
+    }
+  };
+
+  const handleDeleteClick = (tag) => {
+    setTagToDelete(tag);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!tagToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`http://localhost:3000/api/v1/tags/${tagToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete tag');
+      }
+
+      Toastify({
+        text: 'Tag deleted successfully!',
+        duration: 3000,
+        gravity: 'top',
+        position: 'right',
+        style: {
+          background: 'linear-gradient(to right, #00b09b, #96c93d)',
+        },
+      }).showToast();
+
+      // Refresh the tags list
+      await fetchTags();
+      
+      // Close the modal
+      setIsDeleteModalOpen(false);
+      setTagToDelete(null);
+    } catch (error) {
+      console.error('Error deleting tag:', error);
+      Toastify({
+        text: 'Failed to delete tag. Please try again.',
+        duration: 3000,
+        gravity: 'top',
+        position: 'right',
+        style: {
+          background: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+        },
+      }).showToast();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteModalClose = () => {
+    if (!isDeleting) {
+      setIsDeleteModalOpen(false);
+      setTagToDelete(null);
     }
   };
 
@@ -301,6 +365,9 @@ function Tags() {
                       <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Last Used
                       </th>
+                      <th className="p-4 pr-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -322,6 +389,17 @@ function Tags() {
                           </td>
                           <td className="p-4 text-sm text-gray-900">
                             {getRelativeTime(tag.createdAt)}
+                          </td>
+                          <td className="p-4 pr-6 text-right">
+                            <button
+                              onClick={() => handleDeleteClick(tag)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete tag"
+                              data-testid={`delete-tag-${tag.id}`}
+                            >
+                              <Icon icon="mdi:close-circle" className="text-lg" />
+                              <span>Delete</span>
+                            </button>
                           </td>
                         </tr>
                       );
@@ -346,6 +424,15 @@ function Tags() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onTagCreated={handleCreateTag}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
+        tagName={tagToDelete?.name || ''}
+        isDeleting={isDeleting}
       />
     </div>
   );
