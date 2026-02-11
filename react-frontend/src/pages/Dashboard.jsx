@@ -236,7 +236,10 @@ function Dashboard() {
             {/* Actions Bar */}
             <div className="flex flex-col lg:flex-row gap-4 justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
               <div className="flex flex-wrap gap-3">
-                <button className="flex items-center gap-2 h-10 px-5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-bold transition-colors">
+                <button 
+                  onClick={() => navigate('/tags')}
+                  className="flex items-center gap-2 h-10 px-5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-bold transition-colors"
+                >
                   <Icon icon="mdi:tag-multiple" className="text-lg" />
                   <span>Manage Tags</span>
                 </button>

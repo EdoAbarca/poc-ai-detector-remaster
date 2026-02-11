@@ -6,6 +6,7 @@ import { QueueModule } from './queue/queue.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ScanModule } from './scan/scan.module';
+import { TagModule } from './tag/tag.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ScanModule } from './scan/scan.module';
     QueueModule,
     AuthModule,
     ScanModule,
+    TagModule,
   ],
   controllers: [AppController],
   providers: [AppService],

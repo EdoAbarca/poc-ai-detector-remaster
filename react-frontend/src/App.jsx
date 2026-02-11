@@ -3,6 +3,7 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AnalysisDetail from './pages/AnalysisDetail'
+import Tags from './pages/Tags'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
 
@@ -28,6 +29,11 @@ function App () {
         <Route path="/analysis/:id" element={
           <ProtectedRoute>
             <AnalysisDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/tags" element={
+          <ProtectedRoute>
+            <Tags />
           </ProtectedRoute>
         } />
         <Route path="/" element={
