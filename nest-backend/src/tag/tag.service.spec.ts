@@ -14,7 +14,9 @@ describe('TagService', () => {
     tag: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       create: jest.fn(),
+      delete: jest.fn(),
     },
   };
 
@@ -300,6 +302,63 @@ describe('TagService', () => {
       const result = await service.createTag(createTagDto);
 
       expect(result.name).toBe('My Custom Tag');
+    });
+  });
+
+  describe('deleteTag - US-009', () => {
+    it('should delete an existing tag', async () => {
+      const tagId = 1;
+      const existingTag = {
+        id: tagId,
+        name: 'ToDelete',
+        createdAt: new Date('2024-02-11'),
+      };
+
+      mockPrismaService.tag.findUnique.mockResolvedValue(existingTag);
+      mockPrismaService.tag.delete.mockResolvedValue(existingTag);
+
+      const result = await service.deleteTag(tagId);
+
+      expect(mockPrismaService.tag.findUnique).toHaveBeenCalledWith({
+        where: { id: tagId },
+      });
+      expect(mockPrismaService.tag.delete).toHaveBeenCalledWith({
+        where: { id: tagId },
+      });
+      expect(result).toEqual(existingTag);
+    });
+
+    it('should return null when tag does not exist', async () => {
+      const tagId = 999;
+
+      mockPrismaService.tag.findUnique.mockResolvedValue(null);
+
+      const result = await service.deleteTag(tagId);
+
+      expect(mockPrismaService.tag.findUnique).toHaveBeenCalledWith({
+        where: { id: tagId },
+      });
+      expect(mockPrismaService.tag.delete).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it('should handle deletion of tag with many-to-many relationships', async () => {
+      const tagId = 1;
+      const existingTag = {
+        id: tagId,
+        name: 'TagWithRelations',
+        createdAt: new Date('2024-02-11'),
+      };
+
+      mockPrismaService.tag.findUnique.mockResolvedValue(existingTag);
+      mockPrismaService.tag.delete.mockResolvedValue(existingTag);
+
+      const result = await service.deleteTag(tagId);
+
+      expect(result).toEqual(existingTag);
+      expect(mockPrismaService.tag.delete).toHaveBeenCalledWith({
+        where: { id: tagId },
+      });
     });
   });
 });

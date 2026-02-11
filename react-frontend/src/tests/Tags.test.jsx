@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Tags from '../pages/Tags';
 import useAuthStore from '../store/authStore';
@@ -679,6 +679,292 @@ describe('Tags Component - US-007', () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       expect(postCalled).toBe(false);
+
+      global.fetch.mockRestore();
+    });
+  });
+
+  describe('Delete Tag - US-009', () => {
+    it('should show delete button for each tag', async () => {
+      const mockTags = [
+        {
+          id: 1,
+          name: 'Finance',
+          createdAt: new Date('2023-10-24').toISOString(),
+          scanCount: 14,
+        },
+      ];
+
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockTags),
+        })
+      );
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const deleteButton = screen.getByTestId('delete-tag-1');
+      expect(deleteButton).toBeInTheDocument();
+
+      global.fetch.mockRestore();
+    });
+
+    it('should open confirmation modal when delete button is clicked', async () => {
+      const mockTags = [
+        {
+          id: 1,
+          name: 'Finance',
+          createdAt: new Date('2023-10-24').toISOString(),
+          scanCount: 14,
+        },
+      ];
+
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockTags),
+        })
+      );
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+        expect(screen.getByTestId('delete-tag-1')).toBeInTheDocument();
+      });
+
+      const deleteButton = screen.getByTestId('delete-tag-1');
+      
+      await act(async () => {
+        fireEvent.click(deleteButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Delete Tag', { selector: 'h2' })).toBeInTheDocument();
+        expect(screen.getByText(/Are you sure you want to delete the tag/)).toBeInTheDocument();
+        // Check that the modal shows the tag name (will have multiple matches, so use getAllByText)
+        const financeElements = screen.getAllByText(/Finance/);
+        expect(financeElements.length).toBeGreaterThan(1); // Should be in tag list AND modal
+      });
+
+      global.fetch.mockRestore();
+    });
+
+    it('should close confirmation modal when cancel is clicked', async () => {
+      const mockTags = [
+        {
+          id: 1,
+          name: 'Finance',
+          createdAt: new Date('2023-10-24').toISOString(),
+          scanCount: 14,
+        },
+      ];
+
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockTags),
+        })
+      );
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const deleteButton = screen.getByTestId('delete-tag-1');
+      fireEvent.click(deleteButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Delete Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      const cancelButton = screen.getByRole('button', { name: /Cancel/i });
+      fireEvent.click(cancelButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Delete Tag', { selector: 'h2' })).not.toBeInTheDocument();
+      });
+
+      global.fetch.mockRestore();
+    });
+
+    it('should delete tag successfully when confirmed', async () => {
+      const mockTags = [
+        {
+          id: 1,
+          name: 'Finance',
+          createdAt: new Date('2023-10-24').toISOString(),
+          scanCount: 14,
+        },
+      ];
+
+      let deleteCalled = false;
+      global.fetch = vi.fn((url, options) => {
+        if (options && options.method === 'DELETE') {
+          deleteCalled = true;
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ message: 'Tag deleted successfully', tag: mockTags[0] }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockTags),
+        });
+      });
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const deleteButton = screen.getByTestId('delete-tag-1');
+      fireEvent.click(deleteButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Delete Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      const confirmButton = screen.getByRole('button', { name: /Delete Tag/i });
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(deleteCalled).toBe(true);
+        expect(mockShowToast).toHaveBeenCalled();
+      });
+
+      global.fetch.mockRestore();
+    });
+
+    it('should show error toast when delete fails', async () => {
+      const mockTags = [
+        {
+          id: 1,
+          name: 'Finance',
+          createdAt: new Date('2023-10-24').toISOString(),
+          scanCount: 14,
+        },
+      ];
+
+      global.fetch = vi.fn((url, options) => {
+        if (options && options.method === 'DELETE') {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+            json: () => Promise.resolve({ message: 'Internal server error' }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockTags),
+        });
+      });
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const deleteButton = screen.getByTestId('delete-tag-1');
+      fireEvent.click(deleteButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Delete Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      const confirmButton = screen.getByRole('button', { name: /Delete Tag/i });
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockShowToast).toHaveBeenCalled();
+      });
+
+      global.fetch.mockRestore();
+    });
+
+    it('should include authorization header when deleting tag', async () => {
+      const mockTags = [
+        {
+          id: 1,
+          name: 'Finance',
+          createdAt: new Date('2023-10-24').toISOString(),
+          scanCount: 14,
+        },
+      ];
+
+      let authorizationHeader = null;
+      global.fetch = vi.fn((url, options) => {
+        if (options && options.method === 'DELETE') {
+          authorizationHeader = options.headers['Authorization'];
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ message: 'Tag deleted successfully', tag: mockTags[0] }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockTags),
+        });
+      });
+
+      useAuthStore.getState().setAuth(mockUser, {
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+      });
+
+      renderTags();
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
+      });
+
+      const deleteButton = screen.getByTestId('delete-tag-1');
+      fireEvent.click(deleteButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Delete Tag', { selector: 'h2' })).toBeInTheDocument();
+      });
+
+      const confirmButton = screen.getByRole('button', { name: /Delete Tag/i });
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(authorizationHeader).toBe('Bearer test-token');
+      });
 
       global.fetch.mockRestore();
     });

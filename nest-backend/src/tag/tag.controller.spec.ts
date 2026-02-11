@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { TagController } from './tag.controller';
 import { TagService } from './tag.service';
 import { CreateTagDto } from './dto/create-tag.dto';
@@ -13,6 +13,7 @@ describe('TagController', () => {
     getAllTags: jest.fn(),
     findTagByName: jest.fn(),
     createTag: jest.fn(),
+    deleteTag: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -170,6 +171,58 @@ describe('TagController', () => {
 
       expect(mockTagService.findTagByName).toHaveBeenCalledWith('Finance');
       expect(mockTagService.createTag).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteTag - US-009', () => {
+    it('should delete an existing tag and return success message', async () => {
+      const tagId = 1;
+      const deletedTag = {
+        id: tagId,
+        name: 'ToDelete',
+        createdAt: new Date('2024-02-11'),
+      };
+
+      mockTagService.deleteTag.mockResolvedValue(deletedTag);
+
+      const result = await controller.deleteTag(tagId);
+
+      expect(mockTagService.deleteTag).toHaveBeenCalledWith(tagId);
+      expect(result).toEqual({
+        message: 'Tag deleted successfully',
+        tag: deletedTag,
+      });
+    });
+
+    it('should throw NotFoundException when tag does not exist', async () => {
+      const tagId = 999;
+
+      mockTagService.deleteTag.mockResolvedValue(null);
+
+      await expect(controller.deleteTag(tagId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(controller.deleteTag(tagId)).rejects.toThrow(
+        'Tag with ID 999 not found',
+      );
+
+      expect(mockTagService.deleteTag).toHaveBeenCalledWith(tagId);
+    });
+
+    it('should delete tag and remove many-to-many relationships', async () => {
+      const tagId = 5;
+      const deletedTag = {
+        id: tagId,
+        name: 'TagWithRelations',
+        createdAt: new Date('2024-02-11'),
+      };
+
+      mockTagService.deleteTag.mockResolvedValue(deletedTag);
+
+      const result = await controller.deleteTag(tagId);
+
+      expect(result.message).toBe('Tag deleted successfully');
+      expect(result.tag).toEqual(deletedTag);
     });
   });
 });

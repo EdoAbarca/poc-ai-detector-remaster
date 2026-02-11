@@ -78,4 +78,22 @@ export class TagService {
       },
     });
   }
+
+  async deleteTag(id: number) {
+    // First, check if the tag exists
+    const tag = await this.prisma.tag.findUnique({
+      where: { id },
+    });
+
+    if (!tag) {
+      return null;
+    }
+
+    // Delete the tag (many-to-many relationships are handled automatically by Prisma)
+    await this.prisma.tag.delete({
+      where: { id },
+    });
+
+    return tag;
+  }
 }

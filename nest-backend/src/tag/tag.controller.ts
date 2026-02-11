@@ -8,6 +8,8 @@ import {
   HttpStatus,
   ParseIntPipe,
   ConflictException,
+  Delete,
+  NotFoundException,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
 import { CreateTagDto } from './dto/create-tag.dto';
@@ -37,5 +39,18 @@ export class TagController {
       throw new ConflictException('Tag with this name already exists');
     }
     return this.tagService.createTag(createTagDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteTag(@Param('id', ParseIntPipe) id: number) {
+    const deletedTag = await this.tagService.deleteTag(id);
+    if (!deletedTag) {
+      throw new NotFoundException(`Tag with ID ${id} not found`);
+    }
+    return {
+      message: 'Tag deleted successfully',
+      tag: deletedTag,
+    };
   }
 }
