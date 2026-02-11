@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
 import useAuthStore from '../store/authStore';
+import Modal from '../components/Modal';
 
 // Mock scan data for US-004
 const MOCK_SCANS = [
@@ -72,6 +73,9 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('Date');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [scanToDelete, setScanToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -105,18 +109,64 @@ function Dashboard() {
     }, 500);
   };
 
-  const handleDeleteScan = (scanId) => {
-    setScans(scans.filter(scan => scan.id !== scanId));
-    
-    Toastify({
-      text: 'Scan deleted successfully',
-      duration: 3000,
-      gravity: 'top',
-      position: 'right',
-      style: {
-        background: 'linear-gradient(to right, #00b09b, #96c93d)',
-      },
-    }).showToast();
+  const handleDeleteClick = (scan) => {
+    setScanToDelete(scan);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!scanToDelete) return;
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/scan/${scanToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete scan');
+      }
+
+      // Remove the scan from the list
+      setScans(scans.filter(scan => scan.id !== scanToDelete.id));
+
+      Toastify({
+        text: 'Scan deleted successfully',
+        duration: 3000,
+        gravity: 'top',
+        position: 'right',
+        style: {
+          background: 'linear-gradient(to right, #00b09b, #96c93d)',
+        },
+      }).showToast();
+
+      setIsDeleteModalOpen(false);
+      setScanToDelete(null);
+    } catch (error) {
+      console.error('Error deleting scan:', error);
+      
+      Toastify({
+        text: 'Failed to delete scan. Please try again.',
+        duration: 3000,
+        gravity: 'top',
+        position: 'right',
+        style: {
+          background: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+        },
+      }).showToast();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false);
+    setScanToDelete(null);
   };
 
   const formatDate = (date) => {
@@ -324,12 +374,14 @@ function Dashboard() {
                             <button 
                               onClick={() => navigate(`/analysis/${scan.id}`)}
                               className="text-gray-400 hover:text-[#6324eb] transition-colors"
+                              title="View scan details"
                             >
                               <Icon icon="mdi:eye" className="text-xl" />
                             </button>
                             <button
-                              onClick={() => handleDeleteScan(scan.id)}
+                              onClick={() => handleDeleteClick(scan)}
                               className="text-gray-400 hover:text-red-500 transition-colors"
+                              title="Delete scan"
                             >
                               <Icon icon="mdi:delete" className="text-xl" />
                             </button>
@@ -344,6 +396,23 @@ function Dashboard() {
           </section>
         </div>
       </main>
+
+      {/* Delete Confirmation Modal - US-006 */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Scan"
+        message={
+          scanToDelete
+            ? `Are you sure you want to delete "${scanToDelete.title}"? This action cannot be undone and all related documents and results will be permanently removed.`
+            : ''
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
