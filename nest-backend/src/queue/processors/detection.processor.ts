@@ -47,7 +47,13 @@ export class DetectionProcessor extends WorkerHost {
       this.logger.log(`Analyzing ${chunks.length} chunks for document: ${fileId}`);
 
       // Update progress: Starting
-      await job.updateProgress(0);
+      await job.updateProgress({
+        percentage: 0,
+        currentDoc: document.name,
+        status: 'Starting analysis...',
+        chunksProcessed: 0,
+        totalChunks: chunks.length,
+      });
 
       // Process each chunk with Fast-Detect-GPT
       const chunkResults: Array<{
@@ -61,6 +67,8 @@ export class DetectionProcessor extends WorkerHost {
         model: string;
         createdAt: Date;
       }> = [];
+      
+      let lastReportedProgress = 0;
       
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
@@ -88,11 +96,27 @@ export class DetectionProcessor extends WorkerHost {
 
         chunkResults.push(result);
 
-        await job.updateProgress(progressPercent);
+        // Update progress every 5% or on every chunk if there are few chunks
+        if (progressPercent - lastReportedProgress >= 5 || chunks.length <= 20) {
+          await job.updateProgress({
+            percentage: progressPercent,
+            currentDoc: document.name,
+            status: `Processing chunk ${i + 1} of ${chunks.length}...`,
+            chunksProcessed: i + 1,
+            totalChunks: chunks.length,
+          });
+          lastReportedProgress = progressPercent;
+        }
       }
 
       // Aggregate results
-      await job.updateProgress(95);
+      await job.updateProgress({
+        percentage: 95,
+        currentDoc: document.name,
+        status: 'Aggregating results...',
+        chunksProcessed: chunks.length,
+        totalChunks: chunks.length,
+      });
       this.logger.log(`Aggregating results for document: ${fileId}`);
 
       const avgAiScore = chunkResults.reduce((sum, r) => sum + r.aiScore, 0) / chunkResults.length;
@@ -102,7 +126,13 @@ export class DetectionProcessor extends WorkerHost {
       const overallResult = aiChunks > humanChunks ? 'AI' : 'Human';
 
       // Complete
-      await job.updateProgress(100);
+      await job.updateProgress({
+        percentage: 100,
+        currentDoc: document.name,
+        status: 'Analysis complete',
+        chunksProcessed: chunks.length,
+        totalChunks: chunks.length,
+      });
       this.logger.log(
         `AI detection completed for document: ${fileId} - Result: ${overallResult} (${avgAiScore.toFixed(2)}% AI confidence, ${chunkResults.length} chunks analyzed)`,
       );

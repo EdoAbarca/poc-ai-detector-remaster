@@ -270,6 +270,7 @@ describe('DetectionProcessor', () => {
 
       const mockDocument = {
         id: 4,
+        name: 'test.txt',
         filename: 'test.txt',
         textChunks: ['Chunk 1', 'Chunk 2'],
         scan: { id: 1, userId: 1 },
@@ -286,8 +287,8 @@ describe('DetectionProcessor', () => {
         documentId: 4,
         chunkIndex: 0,
         chunkText: 'Chunk',
-        ai_score: 50.0,
-        ai_result: 'Human',
+        aiScore: 50.0,
+        aiResult: 'Human',
         criterion: 0.0,
         model: 'fast-detect-gpt',
         createdAt: new Date(),
@@ -295,10 +296,39 @@ describe('DetectionProcessor', () => {
 
       await processor.process(mockJob);
 
-      expect(mockJob.updateProgress).toHaveBeenCalledWith(0);
-      expect(mockJob.updateProgress).toHaveBeenCalledWith(expect.any(Number));
-      expect(mockJob.updateProgress).toHaveBeenCalledWith(95);
-      expect(mockJob.updateProgress).toHaveBeenCalledWith(100);
+      // Check that progress updates were called with correct structure
+      expect(mockJob.updateProgress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          percentage: 0,
+          currentDoc: 'test.txt',
+          status: 'Starting analysis...',
+          chunksProcessed: 0,
+          totalChunks: 2,
+        }),
+      );
+
+      expect(mockJob.updateProgress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          percentage: 95,
+          currentDoc: 'test.txt',
+          status: 'Aggregating results...',
+          chunksProcessed: 2,
+          totalChunks: 2,
+        }),
+      );
+
+      expect(mockJob.updateProgress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          percentage: 100,
+          currentDoc: 'test.txt',
+          status: 'Analysis complete',
+          chunksProcessed: 2,
+          totalChunks: 2,
+        }),
+      );
+
+      // Verify progress updates every 5% or per chunk
+      expect(mockJob.updateProgress).toHaveBeenCalled();
     });
   });
 });

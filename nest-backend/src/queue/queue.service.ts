@@ -19,6 +19,9 @@ export interface JobProgress {
   percentage: number;
   status: string;
   message?: string;
+  currentDoc?: string;
+  chunksProcessed?: number;
+  totalChunks?: number;
 }
 
 @Injectable()
@@ -87,10 +90,23 @@ export class QueueService {
     }
 
     const state = await job.getState();
-    const progress = job.progress as number;
+    const progress = job.progress;
 
+    // If progress is an object (enhanced progress), return it
+    if (typeof progress === 'object' && progress !== null) {
+      return {
+        percentage: progress.percentage || 0,
+        status: progress.status || state,
+        message: progress.message,
+        currentDoc: progress.currentDoc,
+        chunksProcessed: progress.chunksProcessed,
+        totalChunks: progress.totalChunks,
+      };
+    }
+
+    // If progress is a number (legacy), return simple format
     return {
-      percentage: progress || 0,
+      percentage: (progress as number) || 0,
       status: state,
       message: job.returnvalue || undefined,
     };
