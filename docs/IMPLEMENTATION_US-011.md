@@ -6,6 +6,7 @@ This implementation adds document upload and text extraction functionality to th
 ## What Was Implemented
 
 ### 1. Database Schema Updates
+
 - Added new fields to the `Document` model:
   - `extractedText`: Stores the full extracted text from the document
   - `textChunks`: Array of text chunks split at 2048 characters for Fast Detect GPT
@@ -14,7 +15,9 @@ This implementation adds document upload and text extraction functionality to th
   - `updatedAt`: Timestamp for tracking updates
 
 ### 2. Document Extraction Service
+
 Created `DocumentExtractionService` with the following features:
+
 - **Text Extraction**: Supports PDF, DOCX, and TXT files
   - PDF extraction using `pdf-parse` library
   - DOCX extraction using `mammoth` library
@@ -25,7 +28,9 @@ Created `DocumentExtractionService` with the following features:
   - Preserves text integrity while meeting chunk size requirements
 
 ### 3. Queue Processing
+
 Updated the upload processor to:
+
 - Extract text from uploaded documents asynchronously
 - Update processing status throughout the extraction
 - Store extracted text and chunks in the database
@@ -33,14 +38,18 @@ Updated the upload processor to:
 - Provide progress updates (10%, 70%, 90%, 100%)
 
 ### 4. API Integration
+
 The existing `POST /api/v1/scan/with-files` endpoint now:
+
 - Accepts file uploads (PDF, DOCX, TXT)
 - Creates document records with `pending` status
 - Queues processing jobs for background extraction
 - Returns immediately with document metadata
 
 ### 5. Testing
+
 Added comprehensive test coverage:
+
 - Text extraction from different file types
 - Chunking logic validation
 - Sentence boundary detection
@@ -91,7 +100,9 @@ The API returns the scan with documents in `pending` status:
 ```
 
 ### 3. Background Processing
+
 The document is processed asynchronously:
+
 1. Status changes to `processing`
 2. Text is extracted from the file
 3. Text is split into 2048-character chunks
@@ -114,18 +125,21 @@ WHERE id = 1;
 ## Supported File Formats
 
 ### PDF Files
+
 - **MIME Type**: `application/pdf`
 - **Extension**: `.pdf`
 - **Max Size**: 10MB
 - **Extraction**: Uses `pdf-parse` to extract text content
 
 ### DOCX Files
+
 - **MIME Type**: `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
 - **Extension**: `.docx`
 - **Max Size**: 10MB
 - **Extraction**: Uses `mammoth` to extract text while preserving formatting
 
 ### Plain Text Files
+
 - **MIME Type**: `text/plain`
 - **Extension**: `.txt`
 - **Max Size**: 10MB
@@ -134,15 +148,18 @@ WHERE id = 1;
 ## Error Handling
 
 ### Upload Errors
+
 - Invalid file type → 400 Bad Request
 - File size exceeds limit → 413 Payload Too Large
 - No files provided → 400 Bad Request
 
 ### Processing Errors
+
 - Text extraction fails → `processingStatus: "failed"`, `processingError` contains details
 - Document record is updated but extraction can be retried
 
 ## Queue Monitoring
+
 - Bull Board UI available at: `http://localhost:3333/queues`
 - Monitor upload queue progress
 - View failed jobs and error details
@@ -209,6 +226,7 @@ make test-backend-cov
 ```
 
 ## Future Enhancements
+
 1. Add support for more file formats (DOC, RTF, ODT)
 2. Implement OCR for scanned PDFs
 3. Add real-time progress updates via WebSocket
@@ -238,6 +256,7 @@ pnpm exec prisma migrate dev --name add_document_extraction_fields
 ✅ Jest tests for text extraction from various file formats  
 
 ## Related Files
+
 - `/nest-backend/src/scan/document-extraction.service.ts` - Text extraction logic
 - `/nest-backend/src/scan/document-extraction.service.spec.ts` - Tests
 - `/nest-backend/src/queue/processors/upload.processor.ts` - Background processing
