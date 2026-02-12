@@ -2,10 +2,19 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { DetectionJobData } from '../queue.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { DetectService } from '../../detect/detect.service';
 
 @Processor('detection-queue')
 export class DetectionProcessor extends WorkerHost {
   private readonly logger = new Logger(DetectionProcessor.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly detectService: DetectService,
+  ) {
+    super();
+  }
 
   async process(job: Job<DetectionJobData>): Promise<any> {
     const { fileId, content, userId } = job.data;
@@ -15,43 +24,101 @@ export class DetectionProcessor extends WorkerHost {
     );
 
     try {
-      // Update progress: Starting
-      await job.updateProgress(0);
-      this.logger.debug(`AI detection started for file: ${fileId}`);
+      // Fetch document from database
+      const document = await this.prisma.document.findUnique({
+        where: { id: parseInt(fileId) },
+        include: { scan: true },
+      });
 
-      // Simulate AI detection processing stages
-      const stages = [
-        { progress: 20, message: 'Preprocessing text...' },
-        { progress: 40, message: 'Loading detection models...' },
-        { progress: 60, message: 'Running AI detection analysis...' },
-        { progress: 80, message: 'Computing confidence scores...' },
-        { progress: 90, message: 'Finalizing results...' },
-      ];
-
-      for (const stage of stages) {
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        await job.updateProgress(stage.progress);
-        this.logger.debug(`${stage.message} (${stage.progress}%)`);
+      if (!document) {
+        throw new Error(`Document not found: ${fileId}`);
       }
 
-      // In a real implementation, this would call the fast-detect-gpt service
-      // For now, simulate a detection result
-      const detectionResult = {
-        isAiGenerated: Math.random() > 0.5,
-        confidence: Math.random(),
-        model: 'fast-detect-gpt',
-      };
+      const chunks = document.textChunks || [];
+      if (chunks.length === 0) {
+        this.logger.warn(`No text chunks found for document: ${fileId}`);
+        return {
+          success: false,
+          fileId,
+          message: 'No text chunks to analyze',
+        };
+      }
+
+      this.logger.log(`Analyzing ${chunks.length} chunks for document: ${fileId}`);
+
+      // Update progress: Starting
+      await job.updateProgress(0);
+
+      // Process each chunk with Fast-Detect-GPT
+      const chunkResults: Array<{
+        id: number;
+        documentId: number;
+        chunkIndex: number;
+        chunkText: string;
+        aiScore: number;
+        aiResult: string;
+        criterion: number;
+        model: string;
+        createdAt: Date;
+      }> = [];
+      
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const progressPercent = Math.round(((i + 1) / chunks.length) * 90); // Reserve last 10% for aggregation
+
+        this.logger.debug(`Processing chunk ${i + 1}/${chunks.length} for document: ${fileId}`);
+
+        // Call Fast-Detect-GPT service
+        const detectionResult = await this.detectService.detectWithFastDetectGPT({
+          text: chunk,
+        });
+
+        // Store result in database
+        const result = await this.prisma.result.create({
+          data: {
+            documentId: parseInt(fileId),
+            chunkIndex: i,
+            chunkText: chunk,
+            aiScore: detectionResult.ai_score,
+            aiResult: detectionResult.ai_result,
+            criterion: detectionResult.criterion,
+            model: 'fast-detect-gpt',
+          },
+        });
+
+        chunkResults.push(result);
+
+        await job.updateProgress(progressPercent);
+      }
+
+      // Aggregate results
+      await job.updateProgress(95);
+      this.logger.log(`Aggregating results for document: ${fileId}`);
+
+      const avgAiScore = chunkResults.reduce((sum, r) => sum + r.aiScore, 0) / chunkResults.length;
+      const avgCriterion = chunkResults.reduce((sum, r) => sum + r.criterion, 0) / chunkResults.length;
+      const aiChunks = chunkResults.filter(r => r.aiResult === 'AI').length;
+      const humanChunks = chunkResults.filter(r => r.aiResult === 'Human').length;
+      const overallResult = aiChunks > humanChunks ? 'AI' : 'Human';
 
       // Complete
       await job.updateProgress(100);
       this.logger.log(
-        `AI detection completed for file: ${fileId} - Result: ${detectionResult.isAiGenerated ? 'AI-generated' : 'Human-written'} (${(detectionResult.confidence * 100).toFixed(2)}% confidence)`,
+        `AI detection completed for document: ${fileId} - Result: ${overallResult} (${avgAiScore.toFixed(2)}% AI confidence, ${chunkResults.length} chunks analyzed)`,
       );
 
       return {
         success: true,
         fileId,
-        result: detectionResult,
+        documentId: document.id,
+        result: {
+          overallResult,
+          avgAiScore,
+          avgCriterion,
+          totalChunks: chunkResults.length,
+          aiChunks,
+          humanChunks,
+        },
         message: 'AI detection completed successfully',
       };
     } catch (error) {

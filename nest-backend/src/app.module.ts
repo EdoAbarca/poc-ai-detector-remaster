@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ScanModule } from './scan/scan.module';
 import { TagModule } from './tag/tag.module';
+import { DetectModule } from './detect/detect.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TagModule } from './tag/tag.module';
     AuthModule,
     ScanModule,
     TagModule,
+    DetectModule,
   ],
   controllers: [AppController],
   providers: [AppService],

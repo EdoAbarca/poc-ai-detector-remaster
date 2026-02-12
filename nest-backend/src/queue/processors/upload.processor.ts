@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger, Injectable } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { UploadJobData } from '../queue.service';
+import { UploadJobData, QueueService } from '../queue.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DocumentExtractionService } from '../../scan/document-extraction.service';
 
@@ -13,6 +13,7 @@ export class UploadProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly documentExtraction: DocumentExtractionService,
+    private readonly queueService: QueueService,
   ) {
     super();
   }
@@ -62,6 +63,21 @@ export class UploadProcessor extends WorkerHost {
         },
       });
 
+      // Update progress: Starting AI detection
+      await job.updateProgress(95);
+      this.logger.log(`Queueing AI detection job for document: ${originalName}`);
+
+      // Create detection job in queue
+      const detectionJob = await this.queueService.addDetectionJob({
+        fileId: documentId.toString(),
+        content: text,
+        userId: '1', // TODO: Get from JWT token
+      });
+
+      this.logger.log(
+        `Detection job ${detectionJob.jobId} created for document: ${originalName}`,
+      );
+
       // Complete
       await job.updateProgress(100);
       this.logger.log(
@@ -73,6 +89,7 @@ export class UploadProcessor extends WorkerHost {
         documentId,
         textLength: text.length,
         chunkCount: chunks.length,
+        detectionJobId: detectionJob.jobId,
         message: `Document ${originalName} processed successfully`,
       };
     } catch (error) {
