@@ -111,6 +111,16 @@ export class ScanController {
     return scan;
   }
 
+  @Get('upload-progress/:jobId')
+  @HttpCode(HttpStatus.OK)
+  async getUploadProgress(@Param('jobId') jobId: string) {
+    const progress = await this.scanService.getUploadProgress(jobId);
+    if (!progress) {
+      throw new NotFoundException('Job not found');
+    }
+    return progress;
+  }
+
   @Delete(':scanId')
   @HttpCode(HttpStatus.OK)
   async deleteScan(@Param('scanId', ParseIntPipe) scanId: number) {
