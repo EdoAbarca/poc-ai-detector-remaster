@@ -48,4 +48,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get document() {
     return this.prisma.document;
   }
+
+  get result() {
+    return this.prisma.result;
+  }
 }
