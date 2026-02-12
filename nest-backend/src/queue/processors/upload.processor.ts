@@ -1,48 +1,92 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, Injectable } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { UploadJobData } from '../queue.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { DocumentExtractionService } from '../../scan/document-extraction.service';
 
 @Processor('upload-queue')
+@Injectable()
 export class UploadProcessor extends WorkerHost {
   private readonly logger = new Logger(UploadProcessor.name);
 
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly documentExtraction: DocumentExtractionService,
+  ) {
+    super();
+  }
+
   async process(job: Job<UploadJobData>): Promise<any> {
-    const { fileId, fileName, fileSize, userId } = job.data;
+    const { documentId, filePath, mimetype, originalName } = job.data;
 
     this.logger.log(
-      `Processing upload job ${job.id} for file: ${fileName} (${fileSize} bytes)`,
+      `Processing upload job ${job.id} for document: ${originalName} (ID: ${documentId})`,
     );
 
     try {
-      // Simulate file upload processing
-      // In a real implementation, this would handle actual file upload logic
-      
-      // Update progress: Starting
-      await job.updateProgress(0);
-      this.logger.debug(`Upload started for file: ${fileName}`);
+      // Update status to processing
+      await this.prisma.document.update({
+        where: { id: documentId },
+        data: { processingStatus: 'processing' },
+      });
 
-      // Simulate processing time and progress updates
-      for (let i = 1; i <= 10; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        await job.updateProgress(i * 10);
-        this.logger.debug(`Upload progress for ${fileName}: ${i * 10}%`);
-      }
+      // Update progress: Starting extraction
+      await job.updateProgress(10);
+      this.logger.debug(`Starting text extraction for document: ${originalName}`);
+
+      // Extract text and split into chunks
+      const { text, chunks } = await this.documentExtraction.extractAndChunk(
+        filePath,
+        mimetype,
+      );
+
+      // Update progress: Extraction complete
+      await job.updateProgress(70);
+      this.logger.debug(
+        `Text extraction complete: ${text.length} characters, ${chunks.length} chunks`,
+      );
+
+      // Save extracted text and chunks to database
+      await job.updateProgress(90);
+      await this.prisma.document.update({
+        where: { id: documentId },
+        data: {
+          extractedText: text,
+          textChunks: chunks,
+          processingStatus: 'completed',
+          processingError: null,
+        },
+      });
 
       // Complete
       await job.updateProgress(100);
-      this.logger.log(`Upload completed for file: ${fileName}`);
+      this.logger.log(
+        `Document processing completed for: ${originalName} (${chunks.length} chunks)`,
+      );
 
       return {
         success: true,
-        fileId,
-        message: `File ${fileName} uploaded successfully`,
+        documentId,
+        textLength: text.length,
+        chunkCount: chunks.length,
+        message: `Document ${originalName} processed successfully`,
       };
     } catch (error) {
       this.logger.error(
-        `Failed to process upload for file: ${fileName}`,
+        `Failed to process document: ${originalName}`,
         error.stack,
       );
+
+      // Update document status to failed
+      await this.prisma.document.update({
+        where: { id: documentId },
+        data: {
+          processingStatus: 'failed',
+          processingError: error.message,
+        },
+      });
+
       throw error;
     }
   }

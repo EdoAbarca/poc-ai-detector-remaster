@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
@@ -7,9 +7,13 @@ import { UploadProcessor } from './processors/upload.processor';
 import { DetectionProcessor } from './processors/detection.processor';
 import { QueueService } from './queue.service';
 import { QueueController } from './queue.controller';
+import { PrismaModule } from '../prisma/prisma.module';
+import { ScanModule } from '../scan/scan.module';
 
 @Module({
   imports: [
+    PrismaModule,
+    forwardRef(() => ScanModule),
     // Configure BullMQ with Redis connection
     BullModule.forRoot({
       connection: {
