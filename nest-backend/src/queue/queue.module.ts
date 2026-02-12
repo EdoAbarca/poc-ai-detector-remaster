@@ -9,11 +9,13 @@ import { QueueService } from './queue.service';
 import { QueueController } from './queue.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ScanModule } from '../scan/scan.module';
+import { DetectModule } from '../detect/detect.module';
 
 @Module({
   imports: [
     PrismaModule,
     forwardRef(() => ScanModule),
+    DetectModule,
     // Configure BullMQ with Redis connection
     BullModule.forRoot({
       connection: {
