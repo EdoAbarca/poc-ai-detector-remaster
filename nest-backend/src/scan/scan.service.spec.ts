@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ScanService } from './scan.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { QueueService } from '../queue/queue.service';
 
 describe('ScanService', () => {
   let service: ScanService;
   let prismaService: PrismaService;
+  let queueService: QueueService;
 
   const mockPrismaService = {
     scan: {
@@ -18,6 +20,11 @@ describe('ScanService', () => {
     },
   };
 
+  const mockQueueService = {
+    addUploadJob: jest.fn(),
+    addDetectionJob: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -26,11 +33,16 @@ describe('ScanService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: QueueService,
+          useValue: mockQueueService,
+        },
       ],
     }).compile();
 
     service = module.get<ScanService>(ScanService);
     prismaService = module.get<PrismaService>(PrismaService);
+    queueService = module.get<QueueService>(QueueService);
 
     // Reset all mocks
     jest.clearAllMocks();
