@@ -101,9 +101,18 @@ export class ScanService {
       }),
     );
 
-    await Promise.all(jobPromises);
+    const jobs = await Promise.all(jobPromises);
 
-    return scan;
+    // Map job IDs to documents for progress tracking
+    const documentsWithJobIds = scan.documents.map((doc, index) => ({
+      ...doc,
+      jobId: jobs[index].jobId,
+    }));
+
+    return {
+      ...scan,
+      documents: documentsWithJobIds,
+    };
   }
 
   async getUserScans(userId: number) {
@@ -189,5 +198,9 @@ export class ScanService {
     });
 
     return scan;
+  }
+
+  async getUploadProgress(jobId: string) {
+    return this.queueService.getUploadJobProgress(jobId);
   }
 }

@@ -12,6 +12,7 @@ describe('ScanController', () => {
     getUserScans: jest.fn(),
     getScanById: jest.fn(),
     deleteScan: jest.fn(),
+    getUploadProgress: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -156,6 +157,50 @@ describe('ScanController', () => {
       mockScanService.deleteScan.mockResolvedValue(null);
 
       await expect(controller.deleteScan(scanId)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getUploadProgress', () => {
+    it('should return progress for a valid job ID', async () => {
+      const jobId = 'test-job-123';
+      const mockProgress = {
+        percentage: 75,
+        status: 'active',
+        message: 'Processing document...',
+      };
+
+      mockScanService.getUploadProgress.mockResolvedValue(mockProgress);
+
+      const result = await controller.getUploadProgress(jobId);
+
+      expect(result).toEqual(mockProgress);
+      expect(service.getUploadProgress).toHaveBeenCalledWith(jobId);
+    });
+
+    it('should throw NotFoundException when job is not found', async () => {
+      const jobId = 'non-existent-job';
+
+      mockScanService.getUploadProgress.mockResolvedValue(null);
+
+      await expect(controller.getUploadProgress(jobId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should return progress with 100 percentage for completed jobs', async () => {
+      const jobId = 'completed-job-789';
+      const mockProgress = {
+        percentage: 100,
+        status: 'completed',
+        message: 'Document processed successfully',
+      };
+
+      mockScanService.getUploadProgress.mockResolvedValue(mockProgress);
+
+      const result = await controller.getUploadProgress(jobId);
+
+      expect(result.percentage).toBe(100);
+      expect(result.status).toBe('completed');
     });
   });
 });

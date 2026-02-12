@@ -25,6 +25,9 @@ export class UploadProcessor extends WorkerHost {
     );
 
     try {
+      // Update progress: Upload received (0% - instant when job starts)
+      await job.updateProgress(0);
+
       // Update status to processing
       await this.prisma.document.update({
         where: { id: documentId },
@@ -32,7 +35,7 @@ export class UploadProcessor extends WorkerHost {
       });
 
       // Update progress: Starting extraction
-      await job.updateProgress(10);
+      await job.updateProgress(20);
       this.logger.debug(`Starting text extraction for document: ${originalName}`);
 
       // Extract text and split into chunks
@@ -48,7 +51,7 @@ export class UploadProcessor extends WorkerHost {
       );
 
       // Save extracted text and chunks to database
-      await job.updateProgress(90);
+      await job.updateProgress(85);
       await this.prisma.document.update({
         where: { id: documentId },
         data: {
