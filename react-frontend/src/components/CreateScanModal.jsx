@@ -3,6 +3,7 @@ import { Icon } from '@iconify/react';
 import * as Yup from 'yup';
 import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
+import UploadProgressBar from './UploadProgressBar';
 
 // Validation schema using Yup
 const scanValidationSchema = Yup.object().shape({
@@ -60,7 +61,10 @@ function CreateScanModal({ isOpen, onClose, onScanCreated }) {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const progressIntervalRef = useRef(null);
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -73,8 +77,24 @@ function CreateScanModal({ isOpen, onClose, onScanCreated }) {
       });
       setErrors({});
       setIsDragging(false);
+      setUploadProgress([]);
+      setIsUploading(false);
+      // Clear any ongoing progress polling
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
     }
   }, [isOpen]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Handle escape key
   useEffect(() => {
@@ -173,6 +193,89 @@ function CreateScanModal({ isOpen, onClose, onScanCreated }) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  // Poll for progress updates
+  const pollProgress = async (documentsWithJobs) => {
+    const updateProgress = async () => {
+      const progressPromises = documentsWithJobs.map(async (doc) => {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/v1/scan/upload-progress/${doc.jobId}`
+          );
+          if (response.ok) {
+            const progressData = await response.json();
+            return {
+              fileName: doc.originalName,
+              jobId: doc.jobId,
+              progress: progressData.percentage || 0,
+              status: progressData.status === 'completed' ? 'completed' :
+                     progressData.status === 'failed' ? 'failed' :
+                     progressData.percentage > 10 ? 'processing' : 'uploading',
+              message: progressData.message,
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching progress for job ${doc.jobId}:`, error);
+        }
+        return {
+          fileName: doc.originalName,
+          jobId: doc.jobId,
+          progress: 0,
+          status: 'uploading',
+        };
+      });
+
+      const progresses = await Promise.all(progressPromises);
+      setUploadProgress(progresses);
+
+      // Check if all uploads are complete
+      const allComplete = progresses.every(
+        (p) => p.status === 'completed' || p.status === 'failed'
+      );
+
+      if (allComplete) {
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
+        
+        // Check if any failed
+        const anyFailed = progresses.some((p) => p.status === 'failed');
+        if (!anyFailed) {
+          setTimeout(() => {
+            setIsUploading(false);
+            onClose();
+            Toastify({
+              text: 'All documents processed successfully!',
+              duration: 3000,
+              gravity: 'top',
+              position: 'right',
+              style: {
+                background: 'linear-gradient(to right, #00b09b, #96c93d)',
+              },
+            }).showToast();
+          }, 1000);
+        } else {
+          setIsUploading(false);
+          Toastify({
+            text: 'Some documents failed to process',
+            duration: 3000,
+            gravity: 'top',
+            position: 'right',
+            style: {
+              background: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+            },
+          }).showToast();
+        }
+      }
+    };
+
+    // Initial update
+    await updateProgress();
+    
+    // Poll every 500ms for updates
+    progressIntervalRef.current = setInterval(updateProgress, 500);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setErrors({});
@@ -182,6 +285,7 @@ function CreateScanModal({ isOpen, onClose, onScanCreated }) {
       await scanValidationSchema.validate(formData, { abortEarly: false });
 
       setIsSubmitting(true);
+      setIsUploading(true);
 
       // Create FormData for file upload
       const formDataToSend = new FormData();
@@ -193,6 +297,14 @@ function CreateScanModal({ isOpen, onClose, onScanCreated }) {
       formData.documents.forEach((file) => {
         formDataToSend.append('documents', file);
       });
+
+      // Initialize progress for all files
+      const initialProgress = formData.documents.map((file) => ({
+        fileName: file.name,
+        progress: 0,
+        status: 'uploading',
+      }));
+      setUploadProgress(initialProgress);
 
       // Send to backend
       const response = await fetch('http://localhost:3000/api/v1/scan/with-files', {
@@ -207,24 +319,32 @@ function CreateScanModal({ isOpen, onClose, onScanCreated }) {
 
       const result = await response.json();
 
-      Toastify({
-        text: 'Scan created successfully!',
-        duration: 3000,
-        gravity: 'top',
-        position: 'right',
-        style: {
-          background: 'linear-gradient(to right, #00b09b, #96c93d)',
-        },
-      }).showToast();
-
       // Call callback with result
       if (onScanCreated) {
         onScanCreated(result);
       }
 
-      // Close modal
-      onClose();
+      // Start polling for progress if we have job IDs
+      if (result.documents && result.documents.length > 0) {
+        await pollProgress(result.documents);
+      } else {
+        // No job tracking, just close after brief delay
+        setTimeout(() => {
+          setIsUploading(false);
+          onClose();
+          Toastify({
+            text: 'Scan created successfully!',
+            duration: 3000,
+            gravity: 'top',
+            position: 'right',
+            style: {
+              background: 'linear-gradient(to right, #00b09b, #96c93d)',
+            },
+          }).showToast();
+        }, 1000);
+      }
     } catch (err) {
+      setIsUploading(false);
       if (err.name === 'ValidationError') {
         // Yup validation errors
         const validationErrors = {};
@@ -278,7 +398,7 @@ function CreateScanModal({ isOpen, onClose, onScanCreated }) {
           </h3>
           <button
             onClick={onClose}
-            disabled={isSubmitting}
+            disabled={isSubmitting && !isUploading}
             className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-500 dark:hover:bg-slate-700 disabled:opacity-50"
           >
             <Icon icon="mdi:close" className="text-[20px]" />
@@ -472,6 +592,26 @@ function CreateScanModal({ isOpen, onClose, onScanCreated }) {
               {isSubmitting ? 'Creating...' : 'Start Scan'}
             </button>
           </div>
+
+          {/* Upload Progress Section */}
+          {isUploading && uploadProgress.length > 0 && (
+            <div className="mt-6 border-t border-slate-100 pt-4 dark:border-slate-700">
+              <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">
+                Upload Progress
+              </h4>
+              <div className="space-y-2">
+                {uploadProgress.map((progress, index) => (
+                  <UploadProgressBar
+                    key={progress.jobId || index}
+                    fileName={progress.fileName}
+                    progress={progress.progress}
+                    status={progress.status}
+                    message={progress.message}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>
