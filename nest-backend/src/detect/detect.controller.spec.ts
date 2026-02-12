@@ -1,13 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { DetectController } from './detect.controller';
 import { DetectService } from './detect.service';
+import { QueueService } from '../queue/queue.service';
 
 describe('DetectController', () => {
   let controller: DetectController;
   let service: DetectService;
+  let queueService: QueueService;
 
   const mockDetectService = {
     detectWithFastDetectGPT: jest.fn(),
+  };
+
+  const mockQueueService = {
+    getDetectionJobProgress: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -18,11 +25,16 @@ describe('DetectController', () => {
           provide: DetectService,
           useValue: mockDetectService,
         },
+        {
+          provide: QueueService,
+          useValue: mockQueueService,
+        },
       ],
     }).compile();
 
     controller = module.get<DetectController>(DetectController);
     service = module.get<DetectService>(DetectService);
+    queueService = module.get<QueueService>(QueueService);
   });
 
   afterEach(() => {
@@ -90,6 +102,54 @@ describe('DetectController', () => {
 
       expect(result.ai_result).toBe('Human');
       expect(result.ai_score).toBeLessThan(50);
+    });
+  });
+
+  describe('getDetectionProgress', () => {
+    it('should return progress for a valid job ID', async () => {
+      const jobId = 'test-job-123';
+      const expectedProgress = {
+        percentage: 45,
+        status: 'Processing chunk 5 of 10...',
+        currentDoc: 'test-document.txt',
+        chunksProcessed: 5,
+        totalChunks: 10,
+      };
+
+      mockQueueService.getDetectionJobProgress.mockResolvedValue(expectedProgress);
+
+      const result = await controller.getDetectionProgress(jobId);
+
+      expect(result).toEqual(expectedProgress);
+      expect(queueService.getDetectionJobProgress).toHaveBeenCalledWith(jobId);
+      expect(queueService.getDetectionJobProgress).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw NotFoundException for non-existent job', async () => {
+      const jobId = 'non-existent-job';
+
+      mockQueueService.getDetectionJobProgress.mockResolvedValue(null);
+
+      await expect(controller.getDetectionProgress(jobId)).rejects.toThrow(NotFoundException);
+      expect(queueService.getDetectionJobProgress).toHaveBeenCalledWith(jobId);
+    });
+
+    it('should return completed status when progress is 100%', async () => {
+      const jobId = 'completed-job-456';
+      const completedProgress = {
+        percentage: 100,
+        status: 'Analysis complete',
+        currentDoc: 'completed-document.txt',
+        chunksProcessed: 10,
+        totalChunks: 10,
+      };
+
+      mockQueueService.getDetectionJobProgress.mockResolvedValue(completedProgress);
+
+      const result = await controller.getDetectionProgress(jobId);
+
+      expect(result.percentage).toBe(100);
+      expect(result.status).toBe('Analysis complete');
     });
   });
 });
