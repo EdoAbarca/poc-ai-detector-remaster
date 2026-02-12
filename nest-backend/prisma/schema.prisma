@@ -31,15 +31,20 @@ model Scan {
 }
 
 model Document {
-  id           Int      @id @default(autoincrement())
-  filename     String
-  originalName String
-  mimetype     String
-  size         Int
-  path         String
-  scanId       Int
-  scan         Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
+  id               Int      @id @default(autoincrement())
+  filename         String
+  originalName     String
+  mimetype         String
+  size             Int
+  path             String
+  extractedText    String?  @db.Text
+  textChunks       String[]
+  processingStatus String   @default("pending") // pending, processing, completed, failed
+  processingError  String?  @db.Text
+  scanId           Int
+  scan             Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Tag {
