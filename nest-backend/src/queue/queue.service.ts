@@ -3,10 +3,10 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 
 export interface UploadJobData {
-  fileId: string;
-  fileName: string;
-  fileSize: number;
-  userId: string;
+  documentId: number;
+  filePath: string;
+  mimetype: string;
+  originalName: string;
 }
 
 export interface DetectionJobData {

@@ -4,3 +4,6 @@ node_modules
 
 /generated/prisma
 dist
+
+# Uploaded files (runtime data)
+uploads/

@@ -1,0 +1,29 @@
+# Test Document for AI Detection
+
+This is a test document created to verify the document upload and text extraction functionality of the AI Detection platform.
+
+## Background
+
+The document processing system should be able to:
+1. Accept PDF and DOCX files
+2. Extract text from these documents
+3. Split the text into 2048-character chunks
+4. Store the extracted content in the database
+
+## Test Content
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+## Additional Content
+
+This section contains additional content to make the document longer and test the chunking functionality properly. The system should split this text into appropriate chunks when processing.
+
+### Subsection 1
+
+More content here to increase the document size. The Fast-Detect-GPT system requires text to be split into 2048-character chunks for optimal processing.
+
+### Subsection 2
+
+Final section with more test content to ensure the document is substantial enough for testing purposes.

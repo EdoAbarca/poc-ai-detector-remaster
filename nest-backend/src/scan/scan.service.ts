@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateScanDto, CreateScanWithFilesDto } from './dto/create-scan.dto';
+import { QueueService } from '../queue/queue.service';
 
 @Injectable()
 export class ScanService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private queueService: QueueService,
+  ) {}
 
   async createScan(userId: number, createScanDto: CreateScanDto) {
     const { title, content, aiProviders, tags } = createScanDto;
@@ -77,6 +81,7 @@ export class ScanService {
             mimetype: file.mimetype,
             size: file.size,
             path: file.path,
+            processingStatus: 'pending',
           })),
         },
       },
@@ -85,6 +90,18 @@ export class ScanService {
         documents: true,
       },
     });
+
+    // Queue document processing jobs for each uploaded file
+    const jobPromises = scan.documents.map((document) =>
+      this.queueService.addUploadJob({
+        documentId: document.id,
+        filePath: document.path,
+        mimetype: document.mimetype,
+        originalName: document.originalName,
+      }),
+    );
+
+    await Promise.all(jobPromises);
 
     return scan;
   }

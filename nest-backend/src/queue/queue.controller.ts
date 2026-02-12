@@ -9,10 +9,10 @@ export class QueueController {
   async addUploadJob(
     @Body()
     data: {
-      fileId: string;
-      fileName: string;
-      fileSize: number;
-      userId: string;
+      documentId: number;
+      filePath: string;
+      mimetype: string;
+      originalName: string;
     },
   ) {
     return this.queueService.addUploadJob(data);
